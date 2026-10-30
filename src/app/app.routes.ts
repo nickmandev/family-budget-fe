@@ -90,6 +90,22 @@ export const routes: Routes = [
         title: 'Reallocate funds · Family Budget',
       },
       {
+        path: 'transactions/new',
+        loadComponent: () =>
+          import('./features/transactions/transaction-record-page.component').then(
+            (m) => m.TransactionRecordPageComponent,
+          ),
+        title: 'Record transaction · Family Budget',
+      },
+      {
+        path: 'transactions',
+        loadComponent: () =>
+          import('./features/transactions/transaction-list-page.component').then(
+            (m) => m.TransactionListPageComponent,
+          ),
+        title: 'Transactions · Family Budget',
+      },
+      {
         path: 'accounts/new',
         loadComponent: () =>
           import(

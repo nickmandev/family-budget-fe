@@ -21,6 +21,7 @@ import { AuthEffects } from './state/auth/auth.effects';
 import { BalanceEffects } from './state/balance/balance.effects';
 import { HouseholdEffects } from './state/household/household.effects';
 import { EnvelopeEffects } from './state/envelope/envelope.effects';
+import { TransactionEffects } from './state/transaction/transaction.effects';
 import { metaReducers, reducers } from './state/app.state';
 
 export const appConfig: ApplicationConfig = {
@@ -43,6 +44,7 @@ export const appConfig: ApplicationConfig = {
       AccountEffects,
       BalanceEffects,
       EnvelopeEffects,
+      TransactionEffects,
     ]),
     provideAuthInitializer(),
     provideStoreDevtools({
