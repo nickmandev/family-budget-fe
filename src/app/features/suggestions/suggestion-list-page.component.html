@@ -1,0 +1,199 @@
+<section class="space-y-6">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-wide text-fuchsia-600">Inbox</p>
+      <h2 class="mt-1 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">Suggestions</h2>
+      <p class="mt-1 max-w-2xl text-slate-500">Review candidate transactions. Suggestions do not affect balances or reserve money until confirmed.</p>
+    </div>
+    <button type="button" (click)="toggleCreate()" [disabled]="!householdId()" class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60">
+      {{ createOpen() ? 'Close form' : 'New suggestion' }}
+    </button>
+  </div>
+
+  @if (!householdId()) {
+    <div class="rounded-2xl border border-dashed border-violet-200 bg-white p-10 text-center">
+      <h3 class="text-lg font-semibold text-slate-900">No household selected</h3>
+      <p class="mx-auto mt-2 max-w-md text-sm text-slate-500">Choose or create a household to view suggestions.</p>
+      <a routerLink="/households" class="mt-6 inline-flex rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white">Go to households</a>
+    </div>
+  } @else {
+    @if (error()) {
+      <div role="alert" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ error() }}</div>
+    }
+
+    @if (createOpen()) {
+      <form [formGroup]="createForm" (ngSubmit)="onCreate()" class="space-y-5 rounded-2xl border border-violet-100 bg-white p-5 shadow-sm md:p-6" novalidate>
+        <div>
+          <h3 class="text-lg font-semibold text-slate-900">Create suggestion</h3>
+          <p class="mt-1 text-sm text-slate-500">Add a transaction candidate to review later.</p>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="suggestion-source" class="mb-1.5 block text-sm font-medium text-slate-700">Source</label>
+            <select id="suggestion-source" formControlName="source" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+              @for (source of sourceOptions; track source) { <option [value]="source">{{ source.replaceAll('_', ' ') }}</option> }
+            </select>
+          </div>
+          <div>
+            <label for="suggestion-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Amount ({{ household()?.currency ?? 'EUR' }})</label>
+            <input id="suggestion-amount" type="text" inputmode="decimal" [appMoneyInput]="household()?.currency ?? 'EUR'" formControlName="amountMinor" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="showCreateError(createForm.controls.amountMinor)" />
+            @if (showCreateError(createForm.controls.amountMinor)) { <p class="mt-1.5 text-sm text-rose-600">Enter a positive amount with valid currency precision.</p> }
+          </div>
+          <div class="sm:col-span-2">
+            <label for="suggestion-merchant" class="mb-1.5 block text-sm font-medium text-slate-700">Merchant</label>
+            <input id="suggestion-merchant" type="text" formControlName="merchant" maxlength="200" placeholder="e.g. Grocery store" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="showCreateError(createForm.controls.merchant)" />
+            @if (showCreateError(createForm.controls.merchant)) { <p class="mt-1.5 text-sm text-rose-600">Enter a merchant name.</p> }
+          </div>
+        </div>
+        <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button type="button" (click)="toggleCreate()" class="rounded-xl border border-violet-200 bg-white px-5 py-3 font-medium text-violet-700 transition-colors hover:bg-violet-50">Cancel</button>
+          <button type="submit" [disabled]="saving()" class="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 disabled:cursor-not-allowed disabled:opacity-60">{{ saving() ? 'Saving…' : 'Add suggestion' }}</button>
+        </div>
+      </form>
+    }
+
+    <div class="flex flex-wrap gap-2" role="tablist" aria-label="Filter suggestions">
+      @for (option of [{ id: 'ALL', label: 'All' }, { id: 'OPEN', label: 'Open' }, { id: 'DONE', label: 'Done' }]; track option.id) {
+        <button type="button" role="tab" [attr.aria-selected]="filter() === option.id" (click)="setFilter($any(option.id))" [class.bg-violet-600]="filter() === option.id" [class.text-white]="filter() === option.id" [class.bg-white]="filter() !== option.id" [class.text-violet-700]="filter() !== option.id" class="rounded-xl border border-violet-200 px-4 py-2 text-sm font-medium transition-colors hover:bg-violet-50">{{ option.label }}</button>
+      }
+    </div>
+
+    @if (loading() && suggestions().length === 0) {
+      <div class="rounded-2xl border border-violet-100 bg-white p-10 text-center text-sm text-slate-500">Loading suggestions…</div>
+    } @else if (filteredSuggestions().length === 0) {
+      <div class="rounded-2xl border border-dashed border-violet-200 bg-white p-10 text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-fuchsia-100 text-fuchsia-600" aria-hidden="true">✓</div>
+        <h3 class="mt-4 text-lg font-semibold text-slate-900">{{ suggestions().length === 0 ? 'Your inbox is clear' : 'No suggestions in this view' }}</h3>
+        <p class="mx-auto mt-2 max-w-md text-sm text-slate-500">{{ suggestions().length === 0 ? 'Create a suggestion when you want to review a possible transaction. Nothing is committed until you confirm it.' : 'Try another filter to see the rest of your suggestions.' }}</p>
+        @if (suggestions().length === 0) { <button type="button" (click)="toggleCreate()" class="mt-5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white">Create suggestion</button> }
+      </div>
+    } @else {
+      <div class="space-y-4">
+        @for (suggestion of filteredSuggestions(); track suggestion.id) {
+          <article class="rounded-2xl border border-violet-100 bg-white p-5 shadow-sm transition-all hover:shadow-md md:p-6">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="truncate text-lg font-semibold text-slate-900">{{ suggestion.merchant }}</h3>
+                  <span class="rounded-full px-2.5 py-1 text-xs font-semibold" [class]="stateClasses(suggestion.state)">{{ suggestion.state }}</span>
+                </div>
+                <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
+                  <span>Source: {{ suggestion.source.replaceAll('_', ' ') }}</span>
+                  <span>{{ suggestion.confirmation_count }} {{ suggestion.confirmation_count === 1 ? 'confirmation' : 'confirmations' }}</span>
+                </div>
+              </div>
+              <p class="shrink-0 text-xl font-bold tabular-nums text-slate-900">{{ suggestion.amount_minor | money: (household()?.currency ?? 'EUR') }}</p>
+            </div>
+
+            @if (suggestion.state === 'SUGGESTED' || suggestion.state === 'EDITED') {
+              <div class="mt-5 flex flex-wrap gap-2 border-t border-violet-50 pt-4">
+                <button type="button" (click)="openAction(suggestion, 'CONFIRM')" class="rounded-xl bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-100">Confirm</button>
+                <button type="button" (click)="openAction(suggestion, 'EDIT')" class="rounded-xl bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 transition-colors hover:bg-violet-100">Edit</button>
+                <button type="button" (click)="openAction(suggestion, 'CANCEL')" class="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200">Cancel</button>
+                <button type="button" (click)="openAction(suggestion, 'CONVERT')" class="rounded-xl bg-fuchsia-50 px-4 py-2 text-sm font-semibold text-fuchsia-700 transition-colors hover:bg-fuchsia-100">Convert to plan</button>
+              </div>
+            } @if (activeSuggestionId() === suggestion.id && activeAction(); as action) {
+              <form [formGroup]="actionForm" (ngSubmit)="onActionSubmit()" class="mt-5 space-y-4 rounded-xl border border-violet-100 bg-violet-50/50 p-4 md:p-5" novalidate>
+                @if (action === 'CONFIRM') {
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label for="confirm-kind" class="mb-1.5 block text-sm font-medium text-slate-700">Purchase kind</label>
+                      <select id="confirm-kind" formControlName="purchaseKind" (change)="onPurchaseKindChange()" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+                        @for (kind of purchaseKinds; track kind) { <option [value]="kind">{{ kind }}</option> }
+                      </select>
+                    </div>
+                    <div>
+                      <label for="confirm-account" class="mb-1.5 block text-sm font-medium text-slate-700">Account</label>
+                      <select id="confirm-account" formControlName="accountId" (change)="onConfirmAccountChange()" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="actionError(actionForm.controls.accountId)">
+                        <option value="">Select an account</option>
+                        @for (account of confirmAccounts(); track account.id) { <option [value]="account.id">{{ account.name }} · {{ accountKindLabel(account.kind) }}</option> }
+                      </select>
+                      @if (actionError(actionForm.controls.accountId)) { <p class="mt-1 text-sm text-rose-600">Select an account.</p> }
+                    </div>
+                    <div>
+                      <label for="confirm-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Envelope</label>
+                      <select id="confirm-envelope" formControlName="envelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="actionError(actionForm.controls.envelopeId)">
+                        <option value="">Select an envelope</option>
+                        @for (envelope of activeEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+                      </select>
+                      @if (actionError(actionForm.controls.envelopeId)) { <p class="mt-1 text-sm text-rose-600">Select an envelope.</p> }
+                    </div>
+                    @if (actionForm.controls.purchaseKind.value === 'CARD') {
+                      <div>
+                        <label for="confirm-payment-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Payment envelope</label>
+                        <select id="confirm-payment-envelope" formControlName="paymentEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="actionError(actionForm.controls.paymentEnvelopeId)">
+                          <option value="">Select an envelope</option>
+                          @for (envelope of paymentEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+                        </select>
+                        @if (actionError(actionForm.controls.paymentEnvelopeId)) { <p class="mt-1 text-sm text-rose-600">Select the payment envelope.</p> }
+                      </div>
+                    }
+                    <div>
+                      <label for="confirm-date" class="mb-1.5 block text-sm font-medium text-slate-700">Effective date</label>
+                      <input id="confirm-date" type="date" formControlName="effectiveDate" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+                    </div>
+                    <div class="sm:col-span-2">
+                      <label for="confirm-reason" class="mb-1.5 block text-sm font-medium text-slate-700">Reason (optional)</label>
+                      <input id="confirm-reason" type="text" formControlName="reason" maxlength="500" placeholder="Additional context" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+                    </div>
+                  </div>
+                  <p class="text-xs text-slate-500">Confirming records this already-completed purchase as a committed transaction and updates balances.</p>
+                } @else if (action === 'EDIT') {
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label for="edit-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Amount ({{ household()?.currency ?? 'EUR' }})</label>
+                      <input id="edit-amount" type="text" inputmode="decimal" [appMoneyInput]="household()?.currency ?? 'EUR'" formControlName="amountMinor" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+                      @if (actionError(actionForm.controls.amountMinor)) { <p class="mt-1 text-sm text-rose-600">Enter a positive amount.</p> }
+                    </div>
+                    <div>
+                      <label for="edit-merchant" class="mb-1.5 block text-sm font-medium text-slate-700">Merchant</label>
+                      <input id="edit-merchant" type="text" formControlName="merchant" maxlength="200" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+                    </div>
+                  </div>
+                } @else if (action === 'CANCEL') {
+                  <div>
+                    <label for="cancel-reason" class="mb-1.5 block text-sm font-medium text-slate-700">Reason for cancellation</label>
+                    <textarea id="cancel-reason" formControlName="reason" rows="3" maxlength="500" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" placeholder="Tell us why this suggestion is being dismissed"></textarea>
+                    @if (actionError(actionForm.controls.reason)) { <p class="mt-1 text-sm text-rose-600">A cancellation reason is required.</p> }
+                  </div>
+                } @else {
+                  <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label for="convert-kind" class="mb-1.5 block text-sm font-medium text-slate-700">Plan type</label>
+                      <select id="convert-kind" formControlName="planKind" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+                        @for (kind of planKinds; track kind) { <option [value]="kind">{{ kind }}</option> }
+                      </select>
+                    </div>
+                    <div>
+                      <label for="convert-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Target envelope</label>
+                      <select id="convert-envelope" formControlName="targetEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="actionError(actionForm.controls.targetEnvelopeId)">
+                        <option value="">Select an envelope</option>
+                        @for (envelope of activeEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+                      </select>
+                      @if (actionError(actionForm.controls.targetEnvelopeId)) { <p class="mt-1 text-sm text-rose-600">Select a target envelope.</p> }
+                    </div>
+                    @if (actionForm.controls.planKind.value === 'REPAYMENT') {
+                      <div>
+                        <label for="convert-account" class="mb-1.5 block text-sm font-medium text-slate-700">Target account (optional)</label>
+                        <select id="convert-account" formControlName="targetAccountId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+                          <option value="">No account selected</option>
+                          @for (account of activeAccounts(); track account.id) { <option [value]="account.id">{{ account.name }}</option> }
+                        </select>
+                      </div>
+                    }
+                  </div>
+                  <p class="text-xs text-slate-500">This creates a draft plan only. No money is reserved until the plan is authorized.</p>
+                }
+
+                <div class="flex flex-col-reverse gap-3 pt-1 sm:flex-row sm:justify-end">
+                  <button type="button" (click)="closeAction()" class="rounded-xl border border-violet-200 bg-white px-5 py-3 font-medium text-violet-700 transition-colors hover:bg-violet-50">Close</button>
+                  <button type="submit" [disabled]="saving()" class="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 disabled:cursor-not-allowed disabled:opacity-60">{{ saving() ? 'Saving…' : action === 'CONFIRM' ? 'Confirm transaction' : action === 'EDIT' ? 'Save changes' : action === 'CANCEL' ? 'Cancel suggestion' : 'Create draft plan' }}</button>
+                </div>
+              </form>
+            }
+          </article>
+        }
+      </div>
+    }
+  }
+</section>

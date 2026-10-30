@@ -106,6 +106,14 @@ export const routes: Routes = [
         title: 'Transactions · Family Budget',
       },
       {
+        path: 'suggestions',
+        loadComponent: () =>
+          import('./features/suggestions/suggestion-list-page.component').then(
+            (m) => m.SuggestionListPageComponent,
+          ),
+        title: 'Suggestions · Family Budget',
+      },
+      {
         path: 'plans/new',
         loadComponent: () =>
           import('./features/plans/plan-form-page.component').then(

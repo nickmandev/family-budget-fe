@@ -23,6 +23,7 @@ import { HouseholdEffects } from './state/household/household.effects';
 import { EnvelopeEffects } from './state/envelope/envelope.effects';
 import { TransactionEffects } from './state/transaction/transaction.effects';
 import { PlanEffects } from './state/plan/plan.effects';
+import { SuggestionEffects } from './state/suggestion/suggestion.effects';
 import { metaReducers, reducers } from './state/app.state';
 
 export const appConfig: ApplicationConfig = {
@@ -47,6 +48,7 @@ export const appConfig: ApplicationConfig = {
       EnvelopeEffects,
       TransactionEffects,
       PlanEffects,
+      SuggestionEffects,
     ]),
     provideAuthInitializer(),
     provideStoreDevtools({

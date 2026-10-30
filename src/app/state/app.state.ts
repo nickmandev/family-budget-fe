@@ -14,6 +14,8 @@ import { transactionReducer } from './transaction/transaction.reducer';
 import type { TransactionState } from './transaction/transaction.state';
 import { planReducer } from './plan/plan.reducer';
 import type { PlanState } from './plan/plan.state';
+import { suggestionReducer } from './suggestion/suggestion.reducer';
+import type { SuggestionState } from './suggestion/suggestion.state';
 
 /** Root application state. */
 export interface AppState {
@@ -24,6 +26,7 @@ export interface AppState {
   envelopes: EnvelopeState;
   transactions: TransactionState;
   plans: PlanState;
+  suggestions: SuggestionState;
 }
 
 export const reducers: ActionReducerMap<AppState> = {
@@ -34,6 +37,7 @@ export const reducers: ActionReducerMap<AppState> = {
   envelopes: envelopeReducer,
   transactions: transactionReducer,
   plans: planReducer,
+  suggestions: suggestionReducer,
 };
 
 export const metaReducers: MetaReducer<AppState>[] = [];
