@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Family Budget — UI Mockups</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            violet: {
+              50: '#F5F3FF',
+              100: '#EDE9FE',
+              200: '#DDD6FE',
+              300: '#C4B5FD',
+              400: '#A78BFA',
+              500: '#8B5CF6',
+              600: '#7C3AED',
+              700: '#5B21B6',
+              800: '#4C1D95',
+              900: '#3C1380',
+              950: '#2E1065',
+            },
+            fuchsia: {
+              50: '#FDF4FF',
+              100: '#FAE8FF',
+              200: '#F5D0FE',
+              300: '#F0ABFC',
+              400: '#E879F9',
+              500: '#D946EF',
+              600: '#C026D3',
+              700: '#A21CAF',
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #7C3AED 0%, #D946EF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .gradient-border {
+      position: relative;
+    }
+    .gradient-border::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.5px;
+      background: linear-gradient(135deg, #7C3AED, #D946EF);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-violet-50 text-slate-800 antialiased min-h-screen">
+
+  <!-- Navigation between mockups -->
+  <div class="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-white/90 backdrop-blur rounded-full shadow-lg border border-violet-100 px-2 py-2 flex gap-1">
+    <button onclick="showScreen('login')" id="nav-login" class="px-4 py-2 rounded-full text-sm font-medium transition-all bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white shadow-md">Login</button>
+    <button onclick="showScreen('dashboard')" id="nav-dashboard" class="px-4 py-2 rounded-full text-sm font-medium text-violet-700 hover:bg-violet-50 transition-all">Dashboard</button>
+    <button onclick="showScreen('transactions')" id="nav-transactions" class="px-4 py-2 rounded-full text-sm font-medium text-violet-700 hover:bg-violet-50 transition-all">Transactions</button>
+    <button onclick="showScreen('plans')" id="nav-plans" class="px-4 py-2 rounded-full text-sm font-medium text-violet-700 hover:bg-violet-50 transition-all">Plans</button>
+  </div>
+
+  <!-- ================= LOGIN SCREEN ================= -->
+  <section id="screen-login" class="screen min-h-screen flex items-center justify-center p-4">
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-1/2 -right-1/2 w-[800px] h-[800px] rounded-full bg-gradient-to-br from-violet-400/20 to-fuchsia-400/20 blur-3xl"></div>
+      <div class="absolute -bottom-1/2 -left-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-fuchsia-400/20 to-violet-400/20 blur-3xl"></div>
+    </div>
+
+    <div class="relative w-full max-w-md">
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 flex items-center justify-center shadow-xl shadow-violet-500/30 mb-4">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h1 class="text-3xl font-bold gradient-text mb-2">Family Budget</h1>
+        <p class="text-slate-500">Shared household envelope budgeting</p>
+      </div>
+
+      <div class="glass-card rounded-2xl shadow-xl shadow-violet-900/5 border border-violet-100 p-8">
+        <h2 class="text-xl font-semibold text-slate-900 mb-6">Sign in to your account</h2>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Email address</label>
+            <input type="email" value="sarah@family.com" class="w-full px-4 py-3 rounded-xl border border-violet-200 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 outline-none transition-all" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+            <input type="password" value="••••••••" class="w-full px-4 py-3 rounded-xl border border-violet-200 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 outline-none transition-all" />
+          </div>
+
+          <div class="flex items-center justify-between text-sm">
+            <label class="flex items-center gap-2 text-slate-600">
+              <input type="checkbox" checked class="w-4 h-4 rounded border-violet-300 text-violet-600 focus:ring-fuchsia-500" />
+              Remember me
+            </label>
+            <a href="#" class="text-violet-600 hover:text-fuchsia-600 font-medium">Forgot password?</a>
+          </div>
+
+          <button onclick="showScreen('dashboard')" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600 text-white font-semibold shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 transition-all transform hover:-translate-y-0.5">
+            Sign in
+          </button>
+
+          <button class="w-full py-3.5 rounded-xl bg-white border border-violet-200 text-violet-700 font-medium hover:bg-violet-50 transition-all flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            Continue as guest household
+          </button>
+        </div>
+
+        <p class="mt-6 text-center text-sm text-slate-500">
+          Don't have an account? <a href="#" class="text-violet-600 hover:text-fuchsia-600 font-medium">Create one</a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DASHBOARD SCREEN ================= -->
+  <section id="screen-dashboard" class="screen hidden">
+    <!-- Topbar -->
+    <header class="bg-violet-950 text-white h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-40 shadow-lg">
+      <div class="flex items-center gap-3">
+        <div class="md:hidden w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center font-bold text-sm">FB</div>
+        <h1 class="font-semibold text-lg tracking-tight hidden md:block">Family Budget</h1>
+      </div>
+      <div class="flex items-center gap-3 md:gap-5">
+        <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-900/50 hover:bg-violet-900 text-violet-100 text-sm transition-all border border-violet-700/50">
+          <span>The Smiths</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+        <button class="relative p-2 rounded-lg hover:bg-violet-900 text-violet-200 transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-fuchsia-500"></span>
+        </button>
+        <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 flex items-center justify-center text-sm font-semibold ring-2 ring-violet-400/50 cursor-pointer">JD</div>
+      </div>
+    </header>
+
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside class="hidden md:flex w-64 bg-violet-950 text-white flex-col min-h-[calc(100vh-64px)] sticky top-16">
+        <nav class="flex-1 px-3 py-6 space-y-1">
+          <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-violet-800 to-violet-900 border-l-4 border-fuchsia-500 text-white shadow-lg shadow-violet-950/50">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <span class="font-medium">Dashboard</span>
+          </a>
+          <a href="#" onclick="showScreen('transactions'); return false;" class="flex items-center gap-3 px-4 py-3 rounded-xl text-violet-200 hover:bg-violet-900/70 hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            <span>Transactions</span>
+          </a>
+          <a href="#" onclick="showScreen('plans'); return false;" class="flex items-center gap-3 px-4 py-3 rounded-xl text-violet-200 hover:bg-violet-900/70 hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span>Plans</span>
+          </a>
+          <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-violet-200 hover:bg-violet-900/70 hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span>Suggestions</span>
+            <span class="ml-auto bg-fuchsia-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">3</span>
+          </a>
+          <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-violet-200 hover:bg-violet-900/70 hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+            <span>Settings</span>
+          </a>
+        </nav>
+        <div class="p-4 border-t border-violet-900">
+          <button class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-violet-300 hover:text-white hover:bg-violet-900/70 transition-all w-full">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            <span>Sign out</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
+        <!-- Page header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h2 class="text-2xl md:text-3xl font-bold text-slate-900">Dashboard</h2>
+            <p class="text-slate-500 mt-1">Here's your household budget overview</p>
+          </div>
+          <button onclick="openModal()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600 text-white font-semibold shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/35 transition-all transform hover:-translate-y-0.5">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Record Transaction
+          </button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+          <!-- Ready to Assign -->
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-violet-100 relative overflow-hidden group hover:shadow-md transition-all">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-violet-100/50 to-fuchsia-100/50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="relative">
+              <p class="text-sm font-medium text-slate-500 mb-1">Ready to Assign</p>
+              <p class="text-3xl font-bold text-slate-900">€1,240.00</p>
+              <button class="mt-4 text-sm font-semibold text-violet-600 hover:text-fuchsia-600 flex items-center gap-1 transition-colors">
+                Assign money
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Budgetable Cash -->
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-violet-100 relative overflow-hidden group hover:shadow-md transition-all">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-100/50 to-teal-100/50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="relative">
+              <p class="text-sm font-medium text-slate-500 mb-1">Budgetable Cash</p>
+              <p class="text-3xl font-bold text-slate-900">€3,850.00</p>
+              <div class="mt-4 flex items-center gap-2 text-sm text-emerald-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                <span class="font-medium">+€250 this month</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reserved -->
+          <div class="bg-white rounded-2xl p-6 shadow-sm border border-violet-100 relative overflow-hidden group hover:shadow-md transition-all">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-fuchsia-100/50 to-pink-100/50 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div class="relative">
+              <p class="text-sm font-medium text-slate-500 mb-1">Reserved</p>
+              <p class="text-3xl font-bold text-slate-900">€420.00</p>
+              <div class="mt-4 flex items-center gap-2 text-sm text-fuchsia-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <span class="font-medium">2 active plans</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alert / Resolution -->
+        <div class="mb-8 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+          <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <div class="flex-1">
+            <p class="font-medium text-amber-900">Budget requires resolution</p>
+            <p class="text-sm text-amber-800 mt-0.5">Groceries envelope is overspent by €45.00. Review recent transactions.</p>
+          </div>
+          <button class="text-sm font-semibold text-amber-700 hover:text-amber-900">Review</button>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8">
+          <!-- Accounts -->
+          <div class="xl:col-span-2 space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-violet-100 overflow-hidden">
+              <div class="px-6 py-5 border-b border-violet-100 flex items-center justify-between">
+                <h3 class="font-semibold text-lg text-slate-900">Accounts</h3>
+                <button class="text-sm font-medium text-violet-600 hover:text-fuchsia-600">+ Add account</button>
+              </div>
+              <div class="divide-y divide-violet-50">
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-violet-50/50 transition-colors">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+                      <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    </div>
+                    <div>
+                      <p class="font-medium text-slate-900">Main Checking</p>
+                      <p class="text-xs text-slate-500">CHECKING • Budget eligible</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-semibold text-slate-900">€2,100.00</p>
+                    <p class="text-xs text-slate-500">€1,900.00 spendable</p>
+                  </div>
+                </div>
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-violet-50/50 transition-colors">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                      <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                      <p class="font-medium text-slate-900">Savings</p>
+                      <p class="text-xs text-slate-500">SAVINGS • Budget eligible</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-semibold text-slate-900">€800.00</p>
+                    <p class="text-xs text-slate-500">€800.00 spendable</p>
+                  </div>
+                </div>
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-violet-50/50 transition-colors">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center">
+                      <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    </div>
+                    <div>
+                      <p class="font-medium text-slate-900">Credit Card</p>
+                      <p class="text-xs text-slate-500">CREDIT_CARD_LIABILITY</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-semibold text-rose-600">-€250.00</p>
+                    <p class="text-xs text-slate-500">€250 owed</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="bg-white rounded-2xl shadow-sm border border-violet-100 overflow-hidden">
+              <div class="px-6 py-5 border-b border-violet-100 flex items-center justify-between">
+                <h3 class="font-semibold text-lg text-slate-900">Recent Transactions</h3>
+                <button onclick="showScreen('transactions')" class="text-sm font-medium text-violet-600 hover:text-fuchsia-600">View all</button>
+              </div>
+              <div class="divide-y divide-violet-50">
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-violet-50/50 transition-colors">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
+                    </div>
+                    <div>
+                      <p class="font-medium text-slate-900">Salary</p>
+                      <p class="text-xs text-slate-500">28 Oct 2026 • Income</p>
+                    </div>
+                  </div>
+                  <span class="font-semibold text-emerald-600">+€2,000.00</span>
+                </div>
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-violet-50/50 transition-colors">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 13l-5 5m0 0l-5-5m5 5V6"/></svg>
+                    </div>
+                    <div>
+                      <p class="font-medium text-slate-900">Supermarket</p>
+                      <p class="text-xs text-slate-500">27 Oct 2026 • Groceries</p>
+                    </div>
+                  </div>
+                  <span class="font-semibold text-rose-600">-€84.50</span>
+                </div>
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-violet-50/50 transition-colors">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-600">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                    </div>
+                    <div>
+                      <p class="font-medium text-slate-900">To Savings</p>
+                      <p class="text-xs text-slate-500">25 Oct 2026 • Transfer</p>
+                    </div>
+                  </div>
+                  <span class="font-semibold text-slate-700">-€200.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Envelopes -->
+          <div class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-violet-100 p-6">
+              <div class="flex items-center justify-between mb-5">
+                <h3 class="font-semibold text-lg text-slate-900">Envelopes</h3>
+                <button class="text-sm font-medium text-violet-600 hover:text-fuchsia-600">+ Add</button>
+              </div>
+              <div class="space-y-5">
+                <div>
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="font-medium text-slate-700">Groceries</span>
+                    <span class="text-slate-600">€300 / €500</span>
+                  </div>
+                  <div class="h-2.5 bg-violet-100 rounded-full overflow-hidden">
+                    <div class="h-full w-[60%] bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="font-medium text-slate-700">Transport</span>
+                    <span class="text-slate-600">€120 / €120</span>
+                  </div>
+                  <div class="h-2.5 bg-violet-100 rounded-full overflow-hidden">
+                    <div class="h-full w-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="font-medium text-slate-700">Dining Out</span>
+                    <span class="text-slate-600">€45 / €200</span>
+                  </div>
+                  <div class="h-2.5 bg-violet-100 rounded-full overflow-hidden">
+                    <div class="h-full w-[22.5%] bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-sm mb-2">
+                    <span class="font-medium text-slate-700">Card Payment</span>
+                    <span class="text-slate-600">€250 / €250</span>
+                  </div>
+                  <div class="h-2.5 bg-violet-100 rounded-full overflow-hidden">
+                    <div class="h-full w-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+              <button class="w-full mt-6 py-2.5 rounded-xl border border-violet-200 text-violet-700 font-medium hover:bg-violet-50 transition-colors">
+                Allocate money
+              </button>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-gradient-to-br from-violet-600 to-fuchsia-500 rounded-2xl shadow-lg shadow-violet-500/25 p-6 text-white">
+              <h3 class="font-semibold text-lg mb-3">Quick Actions</h3>
+              <div class="space-y-2">
+                <button class="w-full text-left px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-3">
+                  <span>+</span> Record income
+                </button>
+                <button class="w-full text-left px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-3">
+                  <span>+</span> New purchase plan
+                </button>
+                <button class="w-full text-left px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-3">
+                  <span>↻</span> Reconcile account
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Mobile bottom nav -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-violet-100 flex justify-around py-2 z-40">
+      <a href="#" class="flex flex-col items-center gap-1 p-2 text-violet-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+        <span class="text-[10px]">Home</span>
+      </a>
+      <a href="#" onclick="showScreen('transactions'); return false;" class="flex flex-col items-center gap-1 p-2 text-slate-400">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        <span class="text-[10px]">Txns</span>
+      </a>
+      <a href="#" class="flex flex-col items-center gap-1 p-2 text-slate-400">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span class="text-[10px]">Plans</span>
+      </a>
+      <a href="#" class="flex flex-col items-center gap-1 p-2 text-slate-400">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        <span class="text-[10px]">Settings</span>
+      </a>
+    </nav>
+  </section>
+
+  <!-- ================= TRANSACTIONS SCREEN ================= -->
+  <section id="screen-transactions" class="screen hidden">
+    <header class="bg-violet-950 text-white h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-40 shadow-lg">
+      <div class="flex items-center gap-3">
+        <div class="hidden md:block font-semibold text-lg">Family Budget</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-900/50 text-violet-100 text-sm border border-violet-700/50">
+          <span>The Smiths</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="flex">
+      <aside class="hidden md:flex w-64 bg-violet-950 text-white flex-col min-h-[calc(100vh-64px)] sticky top-16">
+        <nav class="flex-1 px-3 py-6 space-y-1">
+          <a href="#" onclick="showScreen('dashboard'); return false;" class="flex items-center gap-3 px-4 py-3 rounded-xl text-violet-200 hover:bg-violet-900/70 hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-violet-800 to-violet-900 border-l-4 border-fuchsia-500 text-white shadow-lg shadow-violet-950/50">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            <span class="font-medium">Transactions</span>
+          </a>
+          <a href="#" onclick="showScreen('plans'); return false;" class="flex items-center gap-3 px-4 py-3 rounded-xl text-violet-200 hover:bg-violet-900/70 hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span>Plans</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl md:text-3xl font-bold text-slate-900">Transactions</h2>
+            <p class="text-slate-500 mt-1">Committed journal operations</p>
+          </div>
+          <button onclick="openModal()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white font-semibold shadow-lg shadow-violet-500/25">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Record
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-2xl shadow-sm border border-violet-100 p-4 mb-6 flex flex-wrap gap-3">
+          <input type="text" placeholder="Search transactions..." class="px-4 py-2 rounded-xl border border-violet-200 focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-500/20 outline-none flex-1 min-w-[200px]" />
+          <select class="px-4 py-2 rounded-xl border border-violet-200 focus:border-fuchsia-500 outline-none bg-white">
+            <option>All types</option>
+            <option>Income</option>
+            <option>Purchase</option>
+            <option>Transfer</option>
+          </select>
+          <input type="date" value="2026-10-01" class="px-4 py-2 rounded-xl border border-violet-200 focus:border-fuchsia-500 outline-none" />
+          <input type="date" value="2026-10-31" class="px-4 py-2 rounded-xl border border-violet-200 focus:border-fuchsia-500 outline-none" />
+        </div>
+
+        <!-- Transaction list -->
+        <div class="bg-white rounded-2xl shadow-sm border border-violet-100 overflow-hidden">
+          <div class="grid grid-cols-12 gap-4 px-6 py-4 bg-violet-50 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-violet-100">
+            <div class="col-span-2">Date</div>
+            <div class="col-span-4">Description</div>
+            <div class="col-span-2">Type</div>
+            <div class="col-span-2">Account</div>
+            <div class="col-span-2 text-right">Amount</div>
+          </div>
+          <div class="divide-y divide-violet-50">
+            <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-violet-50/50 transition-colors">
+              <div class="col-span-2 text-sm text-slate-600">28 Oct 2026</div>
+              <div class="col-span-4">
+                <p class="font-medium text-slate-900">Salary</p>
+                <p class="text-xs text-slate-500">Monthly income</p>
+              </div>
+              <div class="col-span-2"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">Income</span></div>
+              <div class="col-span-2 text-sm text-slate-600">Checking</div>
+              <div class="col-span-2 text-right font-semibold text-emerald-600">+€2,000.00</div>
+            </div>
+            <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-violet-50/50 transition-colors">
+              <div class="col-span-2 text-sm text-slate-600">27 Oct 2026</div>
+              <div class="col-span-4">
+                <p class="font-medium text-slate-900">Supermarket</p>
+                <p class="text-xs text-slate-500">Groceries</p>
+              </div>
+              <div class="col-span-2"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-700">Purchase</span></div>
+              <div class="col-span-2 text-sm text-slate-600">Checking</div>
+              <div class="col-span-2 text-right font-semibold text-rose-600">-€84.50</div>
+            </div>
+            <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-violet-50/50 transition-colors">
+              <div class="col-span-2 text-sm text-slate-600">25 Oct 2026</div>
+              <div class="col-span-4">
+                <p class="font-medium text-slate-900">To Savings</p>
+                <p class="text-xs text-slate-500">Budget transfer</p>
+              </div>
+              <div class="col-span-2"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-700">Transfer</span></div>
+              <div class="col-span-2 text-sm text-slate-600">Checking</div>
+              <div class="col-span-2 text-right font-semibold text-slate-700">-€200.00</div>
+            </div>
+            <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-violet-50/50 transition-colors">
+              <div class="col-span-2 text-sm text-slate-600">24 Oct 2026</div>
+              <div class="col-span-4">
+                <p class="font-medium text-slate-900">Gas Station</p>
+                <p class="text-xs text-slate-500">Transport</p>
+              </div>
+              <div class="col-span-2"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-700">Purchase</span></div>
+              <div class="col-span-2 text-sm text-slate-600">Credit Card</div>
+              <div class="col-span-2 text-right font-semibold text-rose-600">-€62.30</div>
+            </div>
+          </div>
+          <div class="px-6 py-4 border-t border-violet-100 flex items-center justify-between">
+            <span class="text-sm text-slate-500">Showing 4 of 47</span>
+            <button class="px-4 py-2 rounded-xl border border-violet-200 text-violet-700 font-medium hover:bg-violet-50 transition-colors">Load more</button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <!-- ================= PLANS SCREEN ================= -->
+  <section id="screen-plans" class="screen hidden">
+    <header class="bg-violet-950 text-white h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-40 shadow-lg">
+      <div class="hidden md:block font-semibold text-lg">Family Budget</div>
+      <div class="flex items-center gap-3">
+        <button class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-900/50 text-violet-100 text-sm border border-violet-700/50">
+          <span>The Smiths</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="flex">
+      <aside class="hidden md:flex w-64 bg-violet-950 text-white flex-col min-h-[calc(100vh-64px)] sticky top-16">
+        <nav class="flex-1 px-3 py-6 space-y-1">
+          <a href="#" onclick="showScreen('dashboard'); return false;" class="flex items-center gap-3 px-4 py-3 rounded-xl text-violet-200 hover:bg-violet-900/70 hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="#" onclick="showScreen('transactions'); return false;" class="flex items-center gap-3 px-4 py-3 rounded-xl text-violet-200 hover:bg-violet-900/70 hover:text-white transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+            <span>Transactions</span>
+          </a>
+          <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-violet-800 to-violet-900 border-l-4 border-fuchsia-500 text-white shadow-lg shadow-violet-950/50">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span class="font-medium">Plans</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main class="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl md:text-3xl font-bold text-slate-900">Purchase Plans</h2>
+            <p class="text-slate-500 mt-1">Authorized reservations and drafts</p>
+          </div>
+          <button class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white font-semibold shadow-lg shadow-violet-500/25">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            New Plan
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-violet-100 border-l-4 border-l-fuchsia-500">
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-fuchsia-100 text-fuchsia-700">RESERVED</span>
+              <span class="text-sm text-slate-500">24 Oct</span>
+            </div>
+            <h3 class="font-semibold text-slate-900">New Laptop</h3>
+            <p class="text-sm text-slate-500 mb-3">Electronics envelope</p>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-slate-600">Held <span class="font-semibold text-slate-900">€1,200.00</span></span>
+              <button class="text-sm font-medium text-violet-600 hover:text-fuchsia-600">Complete</button>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-violet-100 border-l-4 border-l-violet-400">
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-700">DRAFT</span>
+              <span class="text-sm text-slate-500">25 Oct</span>
+            </div>
+            <h3 class="font-semibold text-slate-900">Winter Tires</h3>
+            <p class="text-sm text-slate-500 mb-3">Transport envelope</p>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-slate-600">Intended <span class="font-semibold text-slate-900">€600.00</span></span>
+              <button class="text-sm font-medium text-violet-600 hover:text-fuchsia-600">Authorize</button>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-violet-100 border-l-4 border-l-emerald-400">
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">COMPLETED</span>
+              <span class="text-sm text-slate-500">20 Oct</span>
+            </div>
+            <h3 class="font-semibold text-slate-900">Groceries Bulk</h3>
+            <p class="text-sm text-slate-500 mb-3">Groceries envelope</p>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-slate-600">Final <span class="font-semibold text-slate-900">€145.00</span></span>
+              <button class="text-sm font-medium text-slate-400 cursor-default">Done</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <!-- ================= RECORD TRANSACTION MODAL ================= -->
+  <div id="transaction-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-violet-950/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg pointer-events-auto transform transition-all scale-100 border border-violet-100">
+        <div class="px-6 py-5 border-b border-violet-100 flex items-center justify-between">
+          <h3 class="text-xl font-semibold text-slate-900">Record Transaction</h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-5">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Transaction Type</label>
+            <select class="w-full px-4 py-3 rounded-xl border border-violet-200 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 outline-none bg-white">
+              <option>Income</option>
+              <option>Purchase</option>
+              <option>Transfer</option>
+              <option>Card Payment</option>
+              <option>Refund</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Amount</label>
+            <div class="relative">
+              <input type="text" value="1,250.00" class="w-full pl-4 pr-16 py-3 rounded-xl border border-violet-200 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 outline-none" />
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">EUR</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Account</label>
+              <select class="w-full px-4 py-3 rounded-xl border border-violet-200 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 outline-none bg-white">
+                <option>Main Checking</option>
+                <option>Savings</option>
+                <option>Credit Card</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Envelope</label>
+              <select class="w-full px-4 py-3 rounded-xl border border-violet-200 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 outline-none bg-white">
+                <option>Salary</option>
+                <option>Groceries</option>
+                <option>Transport</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Effective Date</label>
+            <input type="date" value="2026-10-28" class="w-full px-4 py-3 rounded-xl border border-violet-200 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 outline-none" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Reason <span class="text-slate-400 font-normal">(optional)</span></label>
+            <input type="text" value="Monthly salary" class="w-full px-4 py-3 rounded-xl border border-violet-200 focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10 outline-none" />
+          </div>
+        </div>
+
+        <div class="px-6 py-5 border-t border-violet-100 flex gap-3 justify-end">
+          <button onclick="closeModal()" class="px-5 py-2.5 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors">Cancel</button>
+          <button onclick="closeModal()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 hover:from-violet-700 hover:to-fuchsia-600 text-white font-semibold shadow-lg shadow-violet-500/25 transition-all">Save Income</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showScreen(screenName) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+      document.getElementById('screen-' + screenName).classList.remove('hidden');
+
+      document.querySelectorAll('[id^="nav-"]').forEach(btn => {
+        btn.classList.remove('bg-gradient-to-r', 'from-violet-600', 'to-fuchsia-500', 'text-white', 'shadow-md');
+        btn.classList.add('text-violet-700', 'hover:bg-violet-50');
+      });
+      const active = document.getElementById('nav-' + screenName);
+      if (active) {
+        active.classList.remove('text-violet-700', 'hover:bg-violet-50');
+        active.classList.add('bg-gradient-to-r', 'from-violet-600', 'to-fuchsia-500', 'text-white', 'shadow-md');
+      }
+    }
+
+    function openModal() {
+      document.getElementById('transaction-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('transaction-modal').classList.add('hidden');
+    }
+
+    // Start on dashboard for the mockup preview
+    showScreen('dashboard');
+  </script>
+</body>
+</html>
