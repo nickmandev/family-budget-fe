@@ -1,0 +1,134 @@
+<main
+  class="relative flex min-h-screen items-center justify-center overflow-hidden bg-violet-50 p-4"
+>
+  <div class="pointer-events-none absolute inset-0 overflow-hidden">
+    <div
+      class="absolute -right-1/2 -top-1/2 h-[800px] w-[800px] rounded-full bg-gradient-to-br from-violet-400/20 to-fuchsia-400/20 blur-3xl"
+    ></div>
+    <div
+      class="absolute -bottom-1/2 -left-1/2 h-[600px] w-[600px] rounded-full bg-gradient-to-tr from-fuchsia-400/20 to-violet-400/20 blur-3xl"
+    ></div>
+  </div>
+
+  <div class="relative w-full max-w-md">
+    <div class="mb-8 text-center">
+      <div
+        class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 shadow-xl shadow-violet-500/30"
+      >
+        <svg
+          class="h-8 w-8 text-white"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+      </div>
+      <h1
+        class="mb-2 bg-gradient-to-r from-violet-600 to-fuchsia-500 bg-clip-text text-3xl font-bold tracking-tight text-transparent"
+      >
+        Family Budget
+      </h1>
+      <p class="text-slate-500">Shared household envelope budgeting</p>
+    </div>
+
+    <div
+      class="rounded-2xl border border-violet-100 bg-white/95 p-8 shadow-xl shadow-violet-900/5 backdrop-blur"
+    >
+      <h2 class="mb-6 text-xl font-semibold text-slate-900">
+        Sign in to your account
+      </h2>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4" novalidate>
+        @if (error()) {
+          <div
+            role="alert"
+            class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+          >
+            {{ error() }}
+          </div>
+        }
+
+        <div>
+          <label for="login-email" class="mb-1.5 block text-sm font-medium text-slate-700">
+            Email address
+          </label>
+          <input
+            id="login-email"
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            placeholder="you@example.com"
+            class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+            [class.border-rose-300]="showError(email)"
+            [attr.aria-invalid]="showError(email)"
+            [attr.aria-describedby]="showError(email) ? 'login-email-error' : null"
+          />
+          @if (showError(email)) {
+            <p id="login-email-error" class="mt-1.5 text-sm text-rose-600">
+              @if (email.hasError('required')) {
+                Email is required.
+              } @else {
+                Enter a valid email address.
+              }
+            </p>
+          }
+        </div>
+
+        <div>
+          <label for="login-password" class="mb-1.5 block text-sm font-medium text-slate-700">
+            Password
+          </label>
+          <input
+            id="login-password"
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+            [class.border-rose-300]="showError(password)"
+            [attr.aria-invalid]="showError(password)"
+            [attr.aria-describedby]="showError(password) ? 'login-password-error' : null"
+          />
+          @if (showError(password)) {
+            <p id="login-password-error" class="mt-1.5 text-sm text-rose-600">
+              @if (password.hasError('required')) {
+                Password is required.
+              } @else {
+                Password must be at least 8 characters.
+              }
+            </p>
+          }
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="loading()"
+          class="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 py-3.5 font-semibold text-white shadow-lg shadow-violet-500/30 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600 hover:shadow-xl hover:shadow-violet-500/40 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        >
+          @if (loading()) {
+            Signing in…
+          } @else {
+            Sign in
+          }
+        </button>
+      </form>
+
+      <p class="mt-6 text-center text-sm text-slate-500">
+        Don't have an account?
+        <a
+          routerLink="/register"
+          class="font-medium text-violet-600 transition-colors hover:text-fuchsia-600"
+        >
+          Create one
+        </a>
+      </p>
+    </div>
+  </div>
+</main>
