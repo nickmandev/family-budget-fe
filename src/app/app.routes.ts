@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 
 import { authGuard } from './core/auth/auth.guard';
 import { publicGuard } from './core/auth/public.guard';
-import { HomeComponent } from './features/home/home.component';
+import { ShellComponent } from './features/shell/shell.component';
 
 export const routes: Routes = [
   {
@@ -24,25 +24,40 @@ export const routes: Routes = [
     title: 'Create account · Family Budget',
   },
   {
-    // Temporary dashboard placeholder until the shell/dashboard task lands.
-    path: 'dashboard',
-    component: HomeComponent,
-    canActivate: [authGuard],
-    title: 'Family Budget App',
-  },
-  {
-    path: 'health-test',
-    loadComponent: () =>
-      import('./features/health-test/health-test.component').then(
-        (m) => m.HealthTestComponent,
-      ),
-    canActivate: [authGuard],
-    title: 'API Health Check',
-  },
-  {
     path: '',
-    pathMatch: 'full',
-    redirectTo: 'dashboard',
+    component: ShellComponent,
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'dashboard',
+      },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard-page.component').then(
+            (m) => m.DashboardPageComponent,
+          ),
+        title: 'Dashboard · Family Budget',
+      },
+      {
+        path: 'households',
+        loadComponent: () =>
+          import(
+            './features/households/pages/household-list/household-list-page.component'
+          ).then((m) => m.HouseholdListPageComponent),
+        title: 'Households · Family Budget',
+      },
+      {
+        path: 'health-test',
+        loadComponent: () =>
+          import('./features/health-test/health-test.component').then(
+            (m) => m.HealthTestComponent,
+          ),
+        title: 'API Health Check · Family Budget',
+      },
+    ],
   },
   {
     path: '**',

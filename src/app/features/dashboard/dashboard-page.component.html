@@ -1,0 +1,534 @@
+<div>
+  <div
+    class="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+  >
+    <div>
+      <h2 class="text-2xl font-bold text-slate-900 md:text-3xl">Dashboard</h2>
+      <p class="mt-1 text-slate-500">
+        @if (currentHousehold(); as household) {
+          {{ household.name }} · {{ household.currency }} budget overview
+        } @else {
+          Your household budget at a glance
+        }
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <a
+        routerLink="/transactions/new"
+        class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600 hover:shadow-xl hover:shadow-violet-500/35"
+      >
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        Record Transaction
+      </a>
+      <a
+        routerLink="/plans/new"
+        class="inline-flex items-center justify-center gap-2 rounded-xl border border-violet-200 bg-white px-5 py-3 font-medium text-violet-700 transition-colors hover:bg-violet-50"
+      >
+        New Plan
+      </a>
+    </div>
+  </div>
+
+  @if (initialLoading()) {
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+        @for (placeholder of [1, 2, 3]; track placeholder) {
+          <div
+            class="h-40 animate-pulse rounded-2xl border border-violet-100 bg-white"
+          ></div>
+        }
+      </div>
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div
+          class="h-72 animate-pulse rounded-2xl border border-violet-100 bg-white xl:col-span-2"
+        ></div>
+        <div
+          class="h-72 animate-pulse rounded-2xl border border-violet-100 bg-white"
+        ></div>
+      </div>
+    </div>
+  } @else if (!currentHousehold()) {
+    <div
+      class="rounded-2xl border border-dashed border-violet-200 bg-white p-10 text-center"
+    >
+      <div
+        class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 shadow-lg shadow-violet-500/25"
+      >
+        <svg
+          class="h-7 w-7 text-white"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-slate-900">No household selected</h3>
+      <p class="mx-auto mt-2 max-w-md text-sm text-slate-500">
+        Create a household or choose one from the switcher to see your budget
+        overview.
+      </p>
+      <a
+        routerLink="/households"
+        class="mt-6 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600 hover:shadow-xl hover:shadow-violet-500/35"
+      >
+        Go to households
+      </a>
+    </div>
+  } @else if (error() && !balances()) {
+    <div
+      class="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-900"
+    >
+      <h3 class="font-semibold">Could not load the budget overview</h3>
+      <p class="mt-1 text-sm text-rose-700">{{ error() }}</p>
+      <button
+        type="button"
+        class="mt-4 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-rose-700"
+        (click)="retry()"
+      >
+        Try again
+      </button>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
+      <article
+        class="relative overflow-hidden rounded-2xl border border-violet-100 bg-white p-6 shadow-sm transition-all hover:shadow-md"
+      >
+        <div
+          class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-gradient-to-br from-violet-100/60 to-fuchsia-100/60"
+          aria-hidden="true"
+        ></div>
+        <div class="relative">
+          <p class="mb-1 text-sm font-medium text-slate-500">Ready to Assign</p>
+          <p class="text-3xl font-bold tracking-tight text-slate-900">
+            {{ readyToAssign() | money: currency() }}
+          </p>
+          <a
+            routerLink="/envelopes"
+            class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-violet-600 transition-colors hover:text-fuchsia-600"
+          >
+            Assign money
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </article>
+
+      <article
+        class="relative overflow-hidden rounded-2xl border border-violet-100 bg-white p-6 shadow-sm transition-all hover:shadow-md"
+      >
+        <div
+          class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-100/60 to-teal-100/60"
+          aria-hidden="true"
+        ></div>
+        <div class="relative">
+          <p class="mb-1 text-sm font-medium text-slate-500">Budgetable Cash</p>
+          <p class="text-3xl font-bold tracking-tight text-slate-900">
+            {{ budgetableCash() | money: currency() }}
+          </p>
+          <div class="mt-4 flex items-center gap-2 text-sm text-emerald-600">
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
+            </svg>
+            <span class="font-medium">
+              Across {{ accounts().length }}
+              {{ accounts().length === 1 ? 'account' : 'accounts' }}
+            </span>
+          </div>
+        </div>
+      </article>
+
+      <article
+        class="relative overflow-hidden rounded-2xl border border-violet-100 bg-white p-6 shadow-sm transition-all hover:shadow-md"
+      >
+        <div
+          class="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-gradient-to-br from-fuchsia-100/60 to-pink-100/60"
+          aria-hidden="true"
+        ></div>
+        <div class="relative">
+          <p class="mb-1 text-sm font-medium text-slate-500">Reserved</p>
+          <p class="text-3xl font-bold tracking-tight text-slate-900">
+            {{ reservedTotal() | money: currency() }}
+          </p>
+          <div class="mt-4 flex items-center gap-2 text-sm text-fuchsia-600">
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+            <span class="font-medium">
+              {{ activePlansCount() }}
+              {{ activePlansCount() === 1 ? 'active plan' : 'active plans' }}
+            </span>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    @if (requiresResolution()) {
+      <div
+        class="mb-8 mt-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4"
+        role="alert"
+      >
+        <svg
+          class="mt-0.5 h-5 w-5 shrink-0 text-amber-600"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+        <div class="flex-1">
+          <p class="font-medium text-amber-900">Budget requires resolution</p>
+          @if (deficitItems().length > 0) {
+            <ul class="mt-1 space-y-0.5 text-sm text-amber-800">
+              @for (
+                deficit of deficitItems();
+                track deficit.kind + (deficit.envelope_id ?? 'ready-to-assign')
+              ) {
+                <li>
+                  {{ deficit.label }} is short by
+                  <span class="font-semibold">
+                    {{ deficit.amount_minor | money: currency() }}
+                  </span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="mt-0.5 text-sm text-amber-800">
+              Review overspent envelopes and Ready to Assign before continuing.
+            </p>
+          }
+        </div>
+        <a
+          routerLink="/transactions"
+          class="text-sm font-semibold text-amber-700 transition-colors hover:text-amber-900"
+        >
+          Review
+        </a>
+      </div>
+    }
+
+    <div class="mt-8 grid grid-cols-1 gap-6 md:gap-8 xl:grid-cols-3">
+      <div class="space-y-6 xl:col-span-2">
+        <section
+          class="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
+        >
+          <div
+            class="flex items-center justify-between border-b border-violet-100 px-6 py-5"
+          >
+            <h3 class="text-lg font-semibold text-slate-900">Accounts</h3>
+            <a
+              routerLink="/accounts/new"
+              class="text-sm font-medium text-violet-600 transition-colors hover:text-fuchsia-600"
+            >
+              + Add account
+            </a>
+          </div>
+
+          @if (accounts().length === 0) {
+            <div class="px-6 py-10 text-center text-sm text-slate-500">
+              No accounts yet. Add an account to start tracking balances.
+            </div>
+          } @else {
+            <div class="divide-y divide-violet-50">
+              @for (account of accounts(); track account.account_id) {
+                <div
+                  class="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-violet-50/50"
+                >
+                  <div class="flex min-w-0 items-center gap-4">
+                    <div
+                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                      [class]="accountIconClasses(account.kind)"
+                    >
+                      <svg
+                        class="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          [attr.d]="accountIcon(account.kind)"
+                        />
+                      </svg>
+                    </div>
+                    <div class="min-w-0">
+                      <p class="truncate font-medium text-slate-900">
+                        {{ account.name }}
+                      </p>
+                      <p class="text-xs text-slate-500">
+                        {{ accountKindLabel(account.kind) }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="shrink-0 text-right">
+                    <p
+                      class="font-semibold"
+                      [class]="accountAmountClasses(account)"
+                    >
+                      {{ account.posted_minor | money: currency() }}
+                    </p>
+                    <p class="text-xs text-slate-500">
+                      {{ account.spendable_minor | money: currency() }} spendable
+                    </p>
+                    @if (account.reserved_minor !== 0) {
+                      <p class="text-xs text-fuchsia-600">
+                        {{ account.reserved_minor | money: currency() }} reserved
+                      </p>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <section
+          class="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm"
+        >
+          <div
+            class="flex items-center justify-between border-b border-violet-100 px-6 py-5"
+          >
+            <h3 class="text-lg font-semibold text-slate-900">
+              Recent Transactions
+            </h3>
+            <a
+              routerLink="/transactions"
+              class="text-sm font-medium text-violet-600 transition-colors hover:text-fuchsia-600"
+            >
+              View all
+            </a>
+          </div>
+
+          @if (recentTransactions().length === 0) {
+            <div class="px-6 py-10 text-center text-sm text-slate-500">
+              No transactions yet. Record income or a purchase to get started.
+            </div>
+          } @else {
+            <div class="divide-y divide-violet-50">
+              @for (
+                transaction of recentTransactions();
+                track transaction.id
+              ) {
+                <div
+                  class="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-violet-50/50"
+                >
+                  <div class="flex min-w-0 items-center gap-4">
+                    <div
+                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                      [class]="transactionIconClasses(transaction)"
+                    >
+                      <svg
+                        class="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          [attr.d]="transactionIcon(transaction)"
+                        />
+                      </svg>
+                    </div>
+                    <div class="min-w-0">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <p class="truncate font-medium text-slate-900">
+                          {{ transactionLabel(transaction) }}
+                        </p>
+                        <span
+                          class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+                          [class]="transactionBadgeClasses(transaction)"
+                        >
+                          {{ transactionTypeLabel(transaction) }}
+                        </span>
+                      </div>
+                      <p class="truncate text-xs text-slate-500">
+                        {{ transactionDate(transaction) }}
+                        @if (transactionAccount(transaction); as account) {
+                          · {{ account }}
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    class="shrink-0 font-semibold"
+                    [class]="transactionAmountClasses(transaction)"
+                  >
+                    @if (transactionAmount(transaction) === null) {
+                      —
+                    } @else {
+                      {{
+                        transactionAmount(transaction)
+                          | money
+                            : currency()
+                            : transactionSignDisplay(transaction)
+                      }}
+                    }
+                  </span>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      </div>
+
+      <div class="space-y-6">
+        <section
+          class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm"
+        >
+          <div class="mb-5 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-slate-900">Envelopes</h3>
+            <a
+              routerLink="/envelopes/new"
+              class="text-sm font-medium text-violet-600 transition-colors hover:text-fuchsia-600"
+            >
+              + Add
+            </a>
+          </div>
+
+          @if (envelopes().length === 0) {
+            <p class="py-4 text-center text-sm text-slate-500">
+              No envelopes yet. Create one to start assigning money.
+            </p>
+          } @else {
+            <div class="space-y-5">
+              @for (envelope of envelopes(); track envelope.envelope_id) {
+                <div>
+                  <div class="mb-2 flex justify-between gap-3 text-sm">
+                    <span class="truncate font-medium text-slate-700">
+                      {{ envelope.name }}
+                    </span>
+                    <span class="shrink-0 text-slate-600">
+                      {{ envelope.balance_minor | money: currency() }} /
+                      {{ envelopeTotal(envelope) | money: currency() }}
+                    </span>
+                  </div>
+                  <div
+                    class="h-2.5 overflow-hidden rounded-full bg-violet-100"
+                    role="progressbar"
+                    [attr.aria-valuenow]="envelopeProgress(envelope)"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    [attr.aria-label]="envelope.name + ' funding progress'"
+                  >
+                    <div
+                      class="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500"
+                      [style.width.%]="envelopeProgress(envelope)"
+                    ></div>
+                  </div>
+                  <p class="mt-1 text-xs text-slate-500">
+                    {{ envelope.spendable_minor | money: currency() }} spendable
+                    @if (envelope.reserved_minor !== 0) {
+                      · {{ envelope.reserved_minor | money: currency() }} reserved
+                    }
+                  </p>
+                </div>
+              }
+            </div>
+          }
+
+          <a
+            routerLink="/envelopes"
+            class="mt-6 block w-full rounded-xl border border-violet-200 py-2.5 text-center font-medium text-violet-700 transition-colors hover:bg-violet-50"
+          >
+            Allocate money
+          </a>
+        </section>
+
+        <section
+          class="rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 p-6 text-white shadow-lg shadow-violet-500/25"
+        >
+          <h3 class="mb-3 text-lg font-semibold">Quick Actions</h3>
+          <div class="space-y-2">
+            <a
+              routerLink="/envelopes"
+              class="flex w-full items-center gap-3 rounded-xl bg-white/10 px-4 py-3 transition-colors hover:bg-white/20"
+            >
+              <span aria-hidden="true">+</span> Assign money
+            </a>
+            <a
+              routerLink="/transactions/new"
+              class="flex w-full items-center gap-3 rounded-xl bg-white/10 px-4 py-3 transition-colors hover:bg-white/20"
+            >
+              <span aria-hidden="true">+</span> Record income
+            </a>
+            <a
+              routerLink="/plans/new"
+              class="flex w-full items-center gap-3 rounded-xl bg-white/10 px-4 py-3 transition-colors hover:bg-white/20"
+            >
+              <span aria-hidden="true">+</span> New purchase plan
+            </a>
+          </div>
+
+          <div class="mt-5 space-y-2 border-t border-white/20 pt-4 text-sm">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-violet-100">Reserved plans</span>
+              <span class="font-semibold">{{ activePlansCount() }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-violet-100">Pending suggestions</span>
+              <span class="font-semibold">{{ pendingSuggestions() }}</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  }
+</div>
