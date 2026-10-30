@@ -104,21 +104,47 @@ export class TransactionListPageComponent {
   }
 
   protected typeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      CARD_FEE_INTEREST: 'Card fee / interest',
+      CASH_REFUND: 'Cash refund',
+      CARD_REFUND: 'Card refund',
+      REVERSAL: 'Reversal',
+      REPLACEMENT: 'Replacement',
+      CATEGORY_CORRECTION: 'Category correction',
+      ACCOUNT_CORRECTION: 'Transaction correction',
+      METADATA_CORRECTION: 'Metadata correction',
+      RECONCILE_INCREASE: 'Reconciliation increase',
+      RECONCILE_DECREASE: 'Reconciliation decrease',
+    };
+    if (labels[type]) return labels[type];
     return type.replaceAll('_', ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
 
   protected badgeClass(type: OperationType): string {
-    if (type === OperationType.INCOME || type === OperationType.REIMBURSEMENT) {
+    if (
+      type === OperationType.INCOME || type === OperationType.REIMBURSEMENT ||
+      type === OperationType.CASH_REFUND || type === OperationType.CARD_REFUND ||
+      type === OperationType.RECONCILE_INCREASE
+    ) {
       return 'bg-emerald-100 text-emerald-700';
     }
     if (
       type === OperationType.DEBIT_PURCHASE ||
       type === OperationType.CASH_PURCHASE ||
-      type === OperationType.CARD_PURCHASE
+      type === OperationType.CARD_PURCHASE ||
+      type === OperationType.CARD_FEE_INTEREST ||
+      type === OperationType.REVERSAL ||
+      type === OperationType.RECONCILE_DECREASE
     ) {
       return 'bg-rose-100 text-rose-700';
     }
     if (type === OperationType.CARD_PAYMENT) {
+      return 'bg-fuchsia-100 text-fuchsia-700';
+    }
+    if (
+      type === OperationType.REPLACEMENT || type === OperationType.CATEGORY_CORRECTION ||
+      type === OperationType.ACCOUNT_CORRECTION || type === OperationType.METADATA_CORRECTION
+    ) {
       return 'bg-fuchsia-100 text-fuchsia-700';
     }
     if (type.startsWith('TRANSFER_')) {

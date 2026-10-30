@@ -22,7 +22,13 @@ import { selectTransactionFilters, selectTransactionNextCursor } from './transac
 function toErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.code === 'ACCOUNT_SCOPE_CHANGE_REQUIRES_FUNDING_PLAN') {
-      return `${error.message} A funding plan is required for this transfer; the funding-plan workflow is not available yet.`;
+      return `${error.message} Provide an explicit funding plan using Ready to Assign or envelope amounts.`;
+    }
+    if (error.code === 'REFUND_EXCEEDS_REMAINDER') {
+      return 'This refund is larger than the refundable amount remaining on the original transaction.';
+    }
+    if (error.code === 'REVERSAL_EXCEEDS_REMAINDER') {
+      return 'This reversal is larger than the reversible amount remaining on the original transaction.';
     }
     return error.message;
   }
@@ -171,6 +177,106 @@ export class TransactionEffects {
     ),
   );
 
+  readonly recordCardFee$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TransactionActions.recordCardFee),
+      exhaustMap(({ householdId, request }) =>
+        this.transactionsService
+          .recordCardFee({ id: householdId, idempotencyKey: crypto.randomUUID(), cardFeeRequest: request })
+          .pipe(
+            mergeMap(({ data: transaction }) => [
+              TransactionActions.recordCardFeeSuccess({ transaction }),
+              TransactionActions.loadTransactions({ householdId }),
+              BalanceActions.loadBalances({ householdId }),
+            ]),
+            catchError((error: unknown) =>
+              of(TransactionActions.recordCardFeeFailure({ error: toErrorMessage(error) })),
+            ),
+          ),
+      ),
+    ),
+  );
+
+  readonly recordRefund$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TransactionActions.recordRefund),
+      exhaustMap(({ householdId, request }) =>
+        this.transactionsService
+          .recordRefund({ id: householdId, idempotencyKey: crypto.randomUUID(), refundRequest: request })
+          .pipe(
+            mergeMap(({ data: transaction }) => [
+              TransactionActions.recordRefundSuccess({ transaction }),
+              TransactionActions.loadTransactions({ householdId }),
+              BalanceActions.loadBalances({ householdId }),
+            ]),
+            catchError((error: unknown) =>
+              of(TransactionActions.recordRefundFailure({ error: toErrorMessage(error) })),
+            ),
+          ),
+      ),
+    ),
+  );
+
+  readonly recordReversal$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TransactionActions.recordReversal),
+      exhaustMap(({ householdId, request }) =>
+        this.transactionsService
+          .recordReversal({ id: householdId, idempotencyKey: crypto.randomUUID(), reversalRequest: request })
+          .pipe(
+            mergeMap(({ data: transaction }) => [
+              TransactionActions.recordReversalSuccess({ transaction }),
+              TransactionActions.loadTransactions({ householdId }),
+              BalanceActions.loadBalances({ householdId }),
+            ]),
+            catchError((error: unknown) =>
+              of(TransactionActions.recordReversalFailure({ error: toErrorMessage(error) })),
+            ),
+          ),
+      ),
+    ),
+  );
+
+  readonly recordCorrection$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TransactionActions.recordCorrection),
+      exhaustMap(({ householdId, request }) =>
+        this.transactionsService
+          .correctOperation({ id: householdId, idempotencyKey: crypto.randomUUID(), correctionRequest: request })
+          .pipe(
+            mergeMap(({ data: transaction }) => [
+              TransactionActions.recordCorrectionSuccess({ transaction }),
+              TransactionActions.loadTransactions({ householdId }),
+              BalanceActions.loadBalances({ householdId }),
+            ]),
+            catchError((error: unknown) =>
+              of(TransactionActions.recordCorrectionFailure({ error: toErrorMessage(error) })),
+            ),
+          ),
+      ),
+    ),
+  );
+
+  readonly recordReconciliation$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(TransactionActions.recordReconciliation),
+      exhaustMap(({ householdId, request }) =>
+        this.transactionsService
+          .reconcileAccount({ id: householdId, idempotencyKey: crypto.randomUUID(), reconciliationRequest: request })
+          .pipe(
+            mergeMap(({ data: transaction }) => [
+              TransactionActions.recordReconciliationSuccess({ transaction }),
+              TransactionActions.loadTransactions({ householdId }),
+              BalanceActions.loadBalances({ householdId }),
+            ]),
+            catchError((error: unknown) =>
+              of(TransactionActions.recordReconciliationFailure({ error: toErrorMessage(error) })),
+            ),
+          ),
+      ),
+    ),
+  );
+
   readonly navigateAfterSave$ = createEffect(
     () =>
       this.actions$.pipe(
@@ -179,6 +285,11 @@ export class TransactionEffects {
           TransactionActions.recordPurchaseSuccess,
           TransactionActions.recordTransferSuccess,
           TransactionActions.recordCardPaymentSuccess,
+          TransactionActions.recordCardFeeSuccess,
+          TransactionActions.recordRefundSuccess,
+          TransactionActions.recordReversalSuccess,
+          TransactionActions.recordCorrectionSuccess,
+          TransactionActions.recordReconciliationSuccess,
         ),
         tap(() => void this.router.navigate(['/transactions'])),
       ),

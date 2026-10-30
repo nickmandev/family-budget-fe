@@ -2,9 +2,14 @@ import { createAction, props } from '@ngrx/store';
 
 import type {
   CardPaymentRequest,
+  CardFeeRequest,
+  CorrectionRequest,
   IncomeRequest,
   OperationType,
   PurchaseRequest,
+  ReconciliationRequest,
+  RefundRequest,
+  ReversalRequest,
   Transaction,
   TransactionSource,
   TransferRequest,
@@ -110,5 +115,70 @@ export const recordCardPaymentSuccess = createAction(
 
 export const recordCardPaymentFailure = createAction(
   '[Transaction] Record Card Payment Failure',
+  props<{ error: string }>(),
+);
+
+export const recordCardFee = createAction(
+  '[Transaction] Record Card Fee',
+  props<{ householdId: string; request: CardFeeRequest }>(),
+);
+export const recordCardFeeSuccess = createAction(
+  '[Transaction] Record Card Fee Success',
+  props<{ transaction: Transaction }>(),
+);
+export const recordCardFeeFailure = createAction(
+  '[Transaction] Record Card Fee Failure',
+  props<{ error: string }>(),
+);
+
+export const recordRefund = createAction(
+  '[Transaction] Record Refund',
+  props<{ householdId: string; request: RefundRequest }>(),
+);
+export const recordRefundSuccess = createAction(
+  '[Transaction] Record Refund Success',
+  props<{ transaction: Transaction }>(),
+);
+export const recordRefundFailure = createAction(
+  '[Transaction] Record Refund Failure',
+  props<{ error: string }>(),
+);
+
+export const recordReversal = createAction(
+  '[Transaction] Record Reversal',
+  props<{ householdId: string; request: ReversalRequest }>(),
+);
+export const recordReversalSuccess = createAction(
+  '[Transaction] Record Reversal Success',
+  props<{ transaction: Transaction }>(),
+);
+export const recordReversalFailure = createAction(
+  '[Transaction] Record Reversal Failure',
+  props<{ error: string }>(),
+);
+
+export const recordCorrection = createAction(
+  '[Transaction] Record Correction',
+  props<{ householdId: string; request: CorrectionRequest }>(),
+);
+export const recordCorrectionSuccess = createAction(
+  '[Transaction] Record Correction Success',
+  props<{ transaction: Transaction }>(),
+);
+export const recordCorrectionFailure = createAction(
+  '[Transaction] Record Correction Failure',
+  props<{ error: string }>(),
+);
+
+export const recordReconciliation = createAction(
+  '[Transaction] Record Reconciliation',
+  props<{ householdId: string; request: ReconciliationRequest }>(),
+);
+export const recordReconciliationSuccess = createAction(
+  '[Transaction] Record Reconciliation Success',
+  props<{ transaction: Transaction }>(),
+);
+export const recordReconciliationFailure = createAction(
+  '[Transaction] Record Reconciliation Failure',
   props<{ error: string }>(),
 );

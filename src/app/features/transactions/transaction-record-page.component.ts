@@ -4,22 +4,29 @@ import {
   computed,
   effect,
   inject,
+  signal,
 } from '@angular/core';
 import {
   AbstractControl,
+  FormArray,
   FormBuilder,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { EMPTY, expand, reduce } from 'rxjs';
 
 import {
   AccountKind,
+  CorrectionKind,
   LifecycleStatus,
   PurchaseKind,
+  Transaction,
+  TransactionsService,
 } from '../../core/api/generated';
 import { MoneyInputDirective } from '../../shared/directives/money-input.directive';
+import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import * as AccountActions from '../../state/account/account.actions';
 import { selectAllAccounts } from '../../state/account/account.selectors';
 import * as EnvelopeActions from '../../state/envelope/envelope.actions';
@@ -31,7 +38,17 @@ import {
 } from '../../state/transaction/transaction.selectors';
 import { selectCurrentHousehold } from '../../state/household/household.selectors';
 
-type RecordKind = 'INCOME' | 'PURCHASE' | 'TRANSFER' | 'CARD_PAYMENT';
+type RecordKind =
+  | 'INCOME'
+  | 'PURCHASE'
+  | 'TRANSFER'
+  | 'CARD_PAYMENT'
+  | 'CARD_FEE'
+  | 'REFUND'
+  | 'REVERSAL'
+  | 'CORRECTION'
+  | 'RECONCILIATION';
+type RefundMethod = 'CASH' | 'CARD';
 
 function localDateString(): string {
   const date = new Date();
@@ -41,13 +58,14 @@ function localDateString(): string {
 
 @Component({
   selector: 'app-transaction-record-page',
-  imports: [MoneyInputDirective, ReactiveFormsModule, RouterLink],
+  imports: [MoneyInputDirective, MoneyPipe, ReactiveFormsModule, RouterLink],
   templateUrl: './transaction-record-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TransactionRecordPageComponent {
   private readonly store = inject(Store);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly transactionsService = inject(TransactionsService);
 
   protected readonly household = this.store.selectSignal(selectCurrentHousehold);
   protected readonly accounts = this.store.selectSignal(selectAllAccounts);
@@ -71,24 +89,58 @@ export class TransactionRecordPageComponent {
     ),
   );
   protected readonly purchaseKinds = [PurchaseKind.DEBIT, PurchaseKind.CASH, PurchaseKind.CARD];
+  protected readonly correctionKinds = Object.values(CorrectionKind);
+  protected readonly refundSearch = signal('');
+  protected readonly originalTransactions = signal<Transaction[]>([]);
+  protected readonly filteredOriginalTransactions = computed(() => {
+    const query = this.refundSearch().trim().toLowerCase();
+    return this.originalTransactions().filter((transaction) => {
+      const label = `${transaction.effective_date} ${transaction.type} ${transaction.amount_minor ?? ''}`.toLowerCase();
+      return !query || label.includes(query);
+    });
+  });
   protected readonly form = this.formBuilder.group({
     kind: this.formBuilder.nonNullable.control<RecordKind>('INCOME', [Validators.required]),
     purchaseKind: this.formBuilder.nonNullable.control<PurchaseKind>(PurchaseKind.DEBIT, [Validators.required]),
+    refundMethod: this.formBuilder.nonNullable.control<RefundMethod>('CASH', [Validators.required]),
+    correctionKind: this.formBuilder.nonNullable.control<CorrectionKind>(CorrectionKind.TRANSACTION, [Validators.required]),
+    replacementEnabled: this.formBuilder.nonNullable.control(false),
     accountId: this.formBuilder.nonNullable.control(''),
     destinationAccountId: this.formBuilder.nonNullable.control(''),
     cardAccountId: this.formBuilder.nonNullable.control(''),
     envelopeId: this.formBuilder.nonNullable.control(''),
+    feeEnvelopeId: this.formBuilder.nonNullable.control(''),
     paymentEnvelopeId: this.formBuilder.nonNullable.control(''),
+    originalEnvelopeId: this.formBuilder.nonNullable.control(''),
+    correctedEnvelopeId: this.formBuilder.nonNullable.control(''),
+    originalOperationId: this.formBuilder.nonNullable.control('', [Validators.required]),
+    replacementAccountId: this.formBuilder.nonNullable.control(''),
+    replacementEnvelopeId: this.formBuilder.nonNullable.control(''),
+    replacementPaymentEnvelopeId: this.formBuilder.nonNullable.control(''),
+    replacementAmountMinor: this.formBuilder.control<number | null>(null),
+    fundingReadyMinor: this.formBuilder.control<number | null>(null, [Validators.min(1)]),
+    fundingRows: this.formBuilder.array([]),
     amountMinor: this.formBuilder.control<number | null>(null, [Validators.required, Validators.min(1)]),
+    deltaMinor: this.formBuilder.control<number | null>(null, [Validators.required, (control) => control.value === 0 ? { nonZero: true } : null]),
     effectiveDate: this.formBuilder.nonNullable.control(localDateString(), [Validators.required]),
     reason: this.formBuilder.nonNullable.control(''),
   });
 
-  private readonly loadReferenceData = effect(() => {
+  private readonly loadReferenceData = effect((onCleanup) => {
     const householdId = this.householdId();
     if (householdId) {
       this.store.dispatch(AccountActions.loadAccounts({ householdId, includeArchived: false }));
       this.store.dispatch(EnvelopeActions.loadEnvelopes({ householdId, includeArchived: false }));
+      const subscription = this.transactionsService.listTransactions({ id: householdId, limit: 200 }).pipe(
+        expand((response) => response.next_cursor
+          ? this.transactionsService.listTransactions({ id: householdId, limit: 200, cursor: response.next_cursor })
+          : EMPTY),
+        reduce((recent, response) => [...recent, ...response.items].slice(-100), [] as Transaction[]),
+      ).subscribe({
+        next: (transactions) => this.originalTransactions.set(transactions),
+        error: () => this.originalTransactions.set([]),
+      });
+      onCleanup(() => subscription.unsubscribe());
     }
   });
 
@@ -108,6 +160,7 @@ export class TransactionRecordPageComponent {
     const controls = this.form.controls;
     const relevant = new Set<string>();
     const kind = controls.kind.value;
+    const requiredReason = kind === 'REVERSAL' || kind === 'RECONCILIATION';
     if (kind === 'INCOME') {
       relevant.add('accountId');
     } else if (kind === 'PURCHASE') {
@@ -122,17 +175,59 @@ export class TransactionRecordPageComponent {
     } else if (kind === 'TRANSFER') {
       relevant.add('accountId');
       relevant.add('destinationAccountId');
-    } else {
+    } else if (kind === 'CARD_PAYMENT') {
       relevant.add('accountId');
       relevant.add('cardAccountId');
       relevant.add('paymentEnvelopeId');
+    } else if (kind === 'CARD_FEE') {
+      relevant.add('cardAccountId');
+      relevant.add('feeEnvelopeId');
+      relevant.add('paymentEnvelopeId');
+    } else if (kind === 'REFUND') {
+      relevant.add('originalOperationId');
+      relevant.add('envelopeId');
+      relevant.add(controls.refundMethod.value === 'CARD' ? 'cardAccountId' : 'accountId');
+      if (controls.refundMethod.value === 'CARD') relevant.add('paymentEnvelopeId');
+    } else if (kind === 'REVERSAL') {
+      relevant.add('originalOperationId');
+    } else if (kind === 'CORRECTION') {
+      relevant.add('originalOperationId');
+      if (controls.correctionKind.value === CorrectionKind.CATEGORY) {
+        relevant.add('originalEnvelopeId');
+        relevant.add('correctedEnvelopeId');
+      }
+      if (controls.replacementEnabled.value && controls.correctionKind.value === CorrectionKind.TRANSACTION) {
+        relevant.add('replacementAccountId');
+        relevant.add('replacementEnvelopeId');
+        relevant.add('replacementAmountMinor');
+        if (controls.purchaseKind.value === PurchaseKind.CARD) {
+          relevant.add('replacementPaymentEnvelopeId');
+        }
+      }
+    } else if (kind === 'RECONCILIATION') {
+      relevant.add('accountId');
     }
 
-    for (const name of ['accountId', 'destinationAccountId', 'cardAccountId', 'envelopeId', 'paymentEnvelopeId'] as const) {
+    for (const name of [
+      'accountId', 'destinationAccountId', 'cardAccountId', 'envelopeId', 'paymentEnvelopeId',
+      'feeEnvelopeId', 'originalOperationId', 'originalEnvelopeId', 'correctedEnvelopeId',
+      'replacementAccountId', 'replacementEnvelopeId', 'replacementPaymentEnvelopeId',
+      'replacementAmountMinor',
+    ] as const) {
       const control = controls[name];
-      control.setValidators(relevant.has(name) ? [Validators.required] : []);
+      control.setValidators(name === 'replacementAmountMinor'
+        ? relevant.has(name) ? [Validators.required, Validators.min(1)] : []
+        : relevant.has(name) ? [Validators.required] : []);
       control.updateValueAndValidity({ emitEvent: false });
     }
+    controls.reason.setValidators(requiredReason ? [Validators.required, Validators.pattern(/\S/)] : []);
+    controls.reason.updateValueAndValidity({ emitEvent: false });
+    controls.amountMinor.setValidators(kind === 'RECONCILIATION' ? [] : [Validators.required, Validators.min(1)]);
+    controls.amountMinor.updateValueAndValidity({ emitEvent: false });
+    controls.deltaMinor.setValidators(kind === 'RECONCILIATION'
+      ? [Validators.required, (control) => control.value === 0 ? { nonZero: true } : null]
+      : []);
+    controls.deltaMinor.updateValueAndValidity({ emitEvent: false });
   }
 
   protected onPurchaseKindChange(): void {
@@ -144,6 +239,51 @@ export class TransactionRecordPageComponent {
 
   protected onCardAccountChange(): void {
     this.updatePaymentEnvelope();
+  }
+
+  protected onRefundMethodChange(): void {
+    this.syncValidators();
+    if (this.form.controls.refundMethod.value === 'CARD') this.updatePaymentEnvelope();
+  }
+
+  protected onCorrectionOptionsChange(): void {
+    this.syncValidators();
+  }
+
+  protected updateOriginalSearch(event: Event): void {
+    this.refundSearch.set((event.target as HTMLInputElement).value);
+  }
+
+  protected originalLabel(transaction: Transaction): string {
+    return `${transaction.effective_date} · ${transaction.type.replaceAll('_', ' ')} ·`;
+  }
+
+  protected fundingRows(): FormArray {
+    return this.form.controls.fundingRows as FormArray;
+  }
+
+  protected addFundingRow(): void {
+    this.fundingRows().push(this.formBuilder.group({
+      envelopeId: this.formBuilder.nonNullable.control('', [Validators.required]),
+      amountMinor: this.formBuilder.control<number | null>(null, [Validators.required, Validators.min(1)]),
+    }));
+  }
+
+  protected removeFundingRow(index: number): void {
+    this.fundingRows().removeAt(index);
+  }
+
+  protected replacementPaymentEnvelopes() {
+    const cardAccountId = this.form.controls.replacementAccountId.value;
+    return this.envelopes().filter((envelope) => envelope.linked_card_account_id === cardAccountId);
+  }
+
+  protected replacementAccounts() {
+    return this.form.controls.purchaseKind.value === PurchaseKind.CARD ? this.cardAccounts() : this.cashAccounts();
+  }
+
+  protected onReplacementAccountChange(): void {
+    this.form.controls.replacementPaymentEnvelopeId.setValue(this.replacementPaymentEnvelopes()[0]?.id ?? '');
   }
 
   protected paymentEnvelopes() {
@@ -169,14 +309,28 @@ export class TransactionRecordPageComponent {
       amountMinor,
       effectiveDate,
       reason,
+      refundMethod,
+      originalOperationId,
+      feeEnvelopeId,
+      originalEnvelopeId,
+      correctedEnvelopeId,
+      correctionKind,
+      replacementEnabled,
+      replacementAccountId,
+      replacementEnvelopeId,
+      replacementPaymentEnvelopeId,
+      replacementAmountMinor,
+      fundingReadyMinor,
+      deltaMinor,
     } = this.form.getRawValue();
-    if (!householdId || amountMinor === null) {
+    if (!householdId || (kind === 'RECONCILIATION' ? deltaMinor === null : amountMinor === null)) {
       return;
     }
+    const amount = amountMinor ?? 0;
 
     const common = {
       effective_date: effectiveDate,
-      amount_minor: amountMinor,
+      amount_minor: amount,
       ...(reason.trim() ? { reason: reason.trim() } : {}),
     };
     if (kind === 'INCOME') {
@@ -211,7 +365,7 @@ export class TransactionRecordPageComponent {
           destination_account_id: destinationAccountId,
         },
       }));
-    } else {
+    } else if (kind === 'CARD_PAYMENT') {
       this.store.dispatch(TransactionActions.recordCardPayment({
         householdId,
         request: {
@@ -219,6 +373,68 @@ export class TransactionRecordPageComponent {
           account_id: accountId,
           card_account_id: cardAccountId,
           payment_envelope_id: paymentEnvelopeId,
+        },
+      }));
+    } else if (kind === 'CARD_FEE') {
+      this.store.dispatch(TransactionActions.recordCardFee({
+        householdId,
+        request: { ...common, card_account_id: cardAccountId, fee_envelope_id: feeEnvelopeId, payment_envelope_id: paymentEnvelopeId },
+      }));
+    } else if (kind === 'REFUND') {
+      this.store.dispatch(TransactionActions.recordRefund({
+        householdId,
+        request: {
+          ...common,
+          original_operation_id: originalOperationId,
+          envelope_id: envelopeId,
+          ...(refundMethod === 'CARD'
+            ? { card_account_id: cardAccountId, payment_envelope_id: paymentEnvelopeId }
+            : { account_id: accountId }),
+        },
+      }));
+    } else if (kind === 'REVERSAL') {
+      this.store.dispatch(TransactionActions.recordReversal({
+        householdId,
+          request: { effective_date: effectiveDate, original_operation_id: originalOperationId, amount_minor: amount, reason: reason.trim() },
+      }));
+    } else if (kind === 'CORRECTION') {
+      this.store.dispatch(TransactionActions.recordCorrection({
+        householdId,
+        request: {
+          ...common,
+          kind: correctionKind,
+          original_operation_id: originalOperationId,
+          ...(correctionKind === CorrectionKind.CATEGORY ? {
+            original_envelope_id: originalEnvelopeId,
+            corrected_envelope_id: correctedEnvelopeId,
+          } : {}),
+          ...(replacementEnabled && correctionKind === CorrectionKind.TRANSACTION ? {
+            replacement: {
+              purchase_kind: purchaseKind,
+              account_id: replacementAccountId,
+              envelope_id: replacementEnvelopeId,
+              ...(purchaseKind === PurchaseKind.CARD ? { payment_envelope_id: replacementPaymentEnvelopeId } : {}),
+              amount_minor: replacementAmountMinor ?? 0,
+            },
+          } : {}),
+        },
+      }));
+    } else {
+      const rows = this.fundingRows().getRawValue() as { envelopeId: string; amountMinor: number | null }[];
+      const funding = fundingReadyMinor || rows.length
+        ? {
+            ...(fundingReadyMinor ? { from_ready_minor: fundingReadyMinor } : {}),
+            ...(rows.length ? { envelopes: rows.map((row) => ({ envelope_id: row.envelopeId, amount_minor: row.amountMinor! })) } : {}),
+          }
+        : undefined;
+      this.store.dispatch(TransactionActions.recordReconciliation({
+        householdId,
+        request: {
+          effective_date: effectiveDate,
+          account_id: accountId,
+          delta_minor: deltaMinor ?? 0,
+          reason: reason.trim(),
+          ...(funding ? { funding } : {}),
         },
       }));
     }

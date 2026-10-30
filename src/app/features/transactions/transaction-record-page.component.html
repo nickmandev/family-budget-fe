@@ -15,6 +15,11 @@
         <option value="PURCHASE">Purchase</option>
         <option value="TRANSFER">Transfer</option>
         <option value="CARD_PAYMENT">Card payment</option>
+        <option value="CARD_FEE">Card fee / interest</option>
+        <option value="REFUND">Refund</option>
+        <option value="REVERSAL">Reversal</option>
+        <option value="CORRECTION">Correction</option>
+        <option value="RECONCILIATION">Reconciliation</option>
       </select>
     </div>
 
@@ -27,10 +32,40 @@
       </div>
     }
 
+    @if (form.controls.kind.value === 'REFUND') {
+      <div>
+        <label for="refund-method" class="mb-1.5 block text-sm font-medium text-slate-700">Refund destination</label>
+        <select id="refund-method" formControlName="refundMethod" (change)="onRefundMethodChange()" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+          <option value="CASH">Cash / bank account</option><option value="CARD">Credit card</option>
+        </select>
+      </div>
+    }
+
+    @if (form.controls.kind.value === 'CORRECTION') {
+      <div>
+        <label for="correction-kind" class="mb-1.5 block text-sm font-medium text-slate-700">Correction type</label>
+        <select id="correction-kind" formControlName="correctionKind" (change)="onCorrectionOptionsChange()" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+          <option [value]="correctionKinds[0]">Transaction</option><option [value]="correctionKinds[1]">Category</option><option [value]="correctionKinds[2]">Metadata</option>
+        </select>
+      </div>
+    }
+
+    @if (['REFUND', 'REVERSAL', 'CORRECTION'].includes(form.controls.kind.value)) {
+      <div>
+        <label for="original-search" class="mb-1.5 block text-sm font-medium text-slate-700">Find original transaction</label>
+        <input id="original-search" type="search" (input)="updateOriginalSearch($event)" placeholder="Search by date, type or amount" class="mb-2 w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+        <select id="original-operation" formControlName="originalOperationId" size="5" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+          <option value="">Select original transaction</option>
+          @for (transaction of filteredOriginalTransactions(); track transaction.id) { <option [value]="transaction.id">{{ originalLabel(transaction) }} {{ transaction.amount_minor | money: transaction.currency }}</option> }
+        </select>
+        @if (showError(form.controls.originalOperationId)) { <p class="mt-1.5 text-sm text-rose-600">Select the original transaction.</p> }
+      </div>
+    }
+
     <div class="grid gap-5 sm:grid-cols-2">
-      @if (form.controls.kind.value === 'INCOME' || form.controls.kind.value === 'TRANSFER' || (form.controls.kind.value === 'PURCHASE' && form.controls.purchaseKind.value !== 'CARD') || form.controls.kind.value === 'CARD_PAYMENT') {
+      @if (form.controls.kind.value === 'INCOME' || form.controls.kind.value === 'TRANSFER' || (form.controls.kind.value === 'PURCHASE' && form.controls.purchaseKind.value !== 'CARD') || form.controls.kind.value === 'CARD_PAYMENT' || (form.controls.kind.value === 'REFUND' && form.controls.refundMethod.value === 'CASH') || form.controls.kind.value === 'RECONCILIATION') {
         <div>
-          <label for="record-account" class="mb-1.5 block text-sm font-medium text-slate-700">{{ form.controls.kind.value === 'TRANSFER' ? 'Source account' : form.controls.kind.value === 'CARD_PAYMENT' ? 'Cash account' : 'Account' }}</label>
+          <label for="record-account" class="mb-1.5 block text-sm font-medium text-slate-700">{{ form.controls.kind.value === 'TRANSFER' ? 'Source account' : form.controls.kind.value === 'CARD_PAYMENT' ? 'Cash account' : form.controls.kind.value === 'RECONCILIATION' ? 'Account to reconcile' : 'Account' }}</label>
           <select id="record-account" formControlName="accountId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
             <option value="">Select an account</option>
             @for (account of cashAccounts(); track account.id) { <option [value]="account.id">{{ account.name }}</option> }
@@ -50,7 +85,7 @@
         </div>
       }
 
-      @if ((form.controls.kind.value === 'PURCHASE' && form.controls.purchaseKind.value === 'CARD') || form.controls.kind.value === 'CARD_PAYMENT') {
+      @if ((form.controls.kind.value === 'PURCHASE' && form.controls.purchaseKind.value === 'CARD') || form.controls.kind.value === 'CARD_PAYMENT' || form.controls.kind.value === 'CARD_FEE' || (form.controls.kind.value === 'REFUND' && form.controls.refundMethod.value === 'CARD')) {
         <div>
           <label for="record-card-account" class="mb-1.5 block text-sm font-medium text-slate-700">Credit card account</label>
           <select id="record-card-account" formControlName="cardAccountId" (change)="onCardAccountChange()" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
@@ -61,14 +96,25 @@
         </div>
       }
 
-      @if (form.controls.kind.value === 'PURCHASE' && form.controls.purchaseKind.value !== 'CARD') {
+      @if ((form.controls.kind.value === 'PURCHASE' && form.controls.purchaseKind.value !== 'CARD') || form.controls.kind.value === 'REFUND') {
         <div>
-          <label for="record-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Spending envelope</label>
+          <label for="record-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">{{ form.controls.kind.value === 'REFUND' ? 'Refund envelope' : 'Spending envelope' }}</label>
           <select id="record-envelope" formControlName="envelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
             <option value="">Select an envelope</option>
             @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
           </select>
           @if (showError(form.controls.envelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select a spending envelope.</p> }
+        </div>
+      }
+
+      @if (form.controls.kind.value === 'CARD_FEE') {
+        <div>
+          <label for="fee-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Fee / interest envelope</label>
+          <select id="fee-envelope" formControlName="feeEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+            <option value="">Select a fee envelope</option>
+            @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+          </select>
+          @if (showError(form.controls.feeEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select the fee envelope.</p> }
         </div>
       }
 
@@ -83,7 +129,7 @@
         </div>
       }
 
-      @if ((form.controls.kind.value === 'PURCHASE' && form.controls.purchaseKind.value === 'CARD') || form.controls.kind.value === 'CARD_PAYMENT') {
+      @if ((form.controls.kind.value === 'PURCHASE' && form.controls.purchaseKind.value === 'CARD') || form.controls.kind.value === 'CARD_PAYMENT' || form.controls.kind.value === 'CARD_FEE' || (form.controls.kind.value === 'REFUND' && form.controls.refundMethod.value === 'CARD')) {
         <div>
           <label for="record-payment-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Card payment envelope</label>
           <select id="record-payment-envelope" formControlName="paymentEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
@@ -94,11 +140,84 @@
         </div>
       }
 
+      @if (form.controls.kind.value === 'CORRECTION' && form.controls.correctionKind.value === 'CATEGORY') {
+        <div>
+          <label for="original-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Original envelope</label>
+          <select id="original-envelope" formControlName="originalEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+            <option value="">Select original envelope</option>
+            @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+          </select>
+          @if (showError(form.controls.originalEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select the original envelope.</p> }
+        </div>
+        <div>
+          <label for="corrected-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Corrected envelope</label>
+          <select id="corrected-envelope" formControlName="correctedEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+            <option value="">Select corrected envelope</option>
+            @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+          </select>
+          @if (showError(form.controls.correctedEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select the corrected envelope.</p> }
+        </div>
+      }
+
+      @if (form.controls.kind.value === 'CORRECTION' && form.controls.correctionKind.value === 'TRANSACTION') {
+        <label class="flex items-center gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
+          <input type="checkbox" formControlName="replacementEnabled" (change)="onCorrectionOptionsChange()" class="h-4 w-4 rounded border-violet-300 text-violet-600 focus:ring-fuchsia-500" />
+          Include a replacement purchase
+        </label>
+        @if (form.controls.replacementEnabled.value) {
+          <div>
+            <label for="replacement-kind" class="mb-1.5 block text-sm font-medium text-slate-700">Replacement purchase method</label>
+            <select id="replacement-kind" formControlName="purchaseKind" (change)="onCorrectionOptionsChange()" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+              @for (purchaseKind of purchaseKinds; track purchaseKind) { <option [value]="purchaseKind">{{ purchaseKind === 'CARD' ? 'Credit card' : purchaseKind === 'CASH' ? 'Cash' : 'Debit' }}</option> }
+            </select>
+          </div>
+          <div>
+            <label for="replacement-account" class="mb-1.5 block text-sm font-medium text-slate-700">Replacement account</label>
+            <select id="replacement-account" formControlName="replacementAccountId" (change)="onReplacementAccountChange()" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+              <option value="">Select account</option>
+              @for (account of replacementAccounts(); track account.id) { <option [value]="account.id">{{ account.name }}</option> }
+            </select>
+            @if (showError(form.controls.replacementAccountId)) { <p class="mt-1.5 text-sm text-rose-600">Select the replacement account.</p> }
+          </div>
+          <div>
+            <label for="replacement-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Replacement envelope</label>
+            <select id="replacement-envelope" formControlName="replacementEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+              <option value="">Select envelope</option>
+              @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+            </select>
+            @if (showError(form.controls.replacementEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select the replacement envelope.</p> }
+          </div>
+          @if (form.controls.purchaseKind.value === 'CARD') {
+            <div>
+              <label for="replacement-payment-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Replacement card payment envelope</label>
+              <select id="replacement-payment-envelope" formControlName="replacementPaymentEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+                <option value="">Select payment envelope</option>
+                @for (envelope of replacementPaymentEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+              </select>
+              @if (showError(form.controls.replacementPaymentEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select the card payment envelope.</p> }
+            </div>
+          }
+          <div>
+            <label for="replacement-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Replacement purchase amount ({{ currency() }})</label>
+            <input id="replacement-amount" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="replacementAmountMinor" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+            @if (showError(form.controls.replacementAmountMinor)) { <p class="mt-1.5 text-sm text-rose-600">Enter a positive replacement purchase amount.</p> }
+          </div>
+        }
+      }
+
+      @if (form.controls.kind.value !== 'RECONCILIATION') {
       <div>
         <label for="record-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Amount ({{ currency() }})</label>
         <input id="record-amount" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="amountMinor" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="showError(amount)" [attr.aria-invalid]="showError(amount)" />
         @if (showError(amount)) { <p class="mt-1.5 text-sm text-rose-600">Enter a positive amount with valid {{ currency() }} precision.</p> }
       </div>
+      } @else {
+        <div>
+          <label for="reconciliation-delta" class="mb-1.5 block text-sm font-medium text-slate-700">Balance adjustment ({{ currency() }})</label>
+          <input id="reconciliation-delta" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="deltaMinor" placeholder="Positive or negative amount" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+          @if (showError(form.controls.deltaMinor)) { <p class="mt-1.5 text-sm text-rose-600">Enter a non-zero adjustment; use a negative amount to decrease the balance.</p> }
+        </div>
+      }
 
       <div>
         <label for="record-date" class="mb-1.5 block text-sm font-medium text-slate-700">Effective date</label>
@@ -107,9 +226,39 @@
       </div>
     </div>
 
+    @if (form.controls.kind.value === 'RECONCILIATION') {
+      <fieldset class="space-y-4 rounded-xl border border-violet-100 p-4">
+        <legend class="px-1 text-sm font-semibold text-slate-800">Optional funding plan</legend>
+        <div>
+          <label for="funding-ready" class="mb-1.5 block text-sm font-medium text-slate-700">From Ready to Assign ({{ currency() }})</label>
+          <input id="funding-ready" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="fundingReadyMinor" placeholder="Optional amount" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+        </div>
+        <div formArrayName="fundingRows" class="space-y-3">
+          @for (row of fundingRows().controls; track $index; let i = $index) {
+            <div [formGroupName]="i" class="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+              <div>
+                <label [for]="'funding-envelope-' + i" class="mb-1.5 block text-sm font-medium text-slate-700">Envelope</label>
+                <select [id]="'funding-envelope-' + i" formControlName="envelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+                  <option value="">Select envelope</option>
+                  @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+                </select>
+              </div>
+              <div>
+                <label [for]="'funding-amount-' + i" class="mb-1.5 block text-sm font-medium text-slate-700">Funding amount ({{ currency() }})</label>
+                <input [id]="'funding-amount-' + i" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="amountMinor" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+              </div>
+              <button type="button" (click)="removeFundingRow(i)" class="self-end rounded-xl border border-violet-200 px-4 py-3 text-sm font-medium text-violet-700 hover:bg-violet-50">Remove</button>
+            </div>
+          }
+        </div>
+        <button type="button" (click)="addFundingRow()" class="rounded-xl border border-violet-200 bg-white px-4 py-2.5 text-sm font-medium text-violet-700 hover:bg-violet-50">Add envelope funding</button>
+      </fieldset>
+    }
+
     <div>
-      <label for="record-reason" class="mb-1.5 block text-sm font-medium text-slate-700">Description / reason (optional)</label>
+      <label for="record-reason" class="mb-1.5 block text-sm font-medium text-slate-700">Description / reason {{ form.controls.kind.value === 'REVERSAL' || form.controls.kind.value === 'RECONCILIATION' ? '(required)' : '(optional)' }}</label>
       <input id="record-reason" type="text" formControlName="reason" placeholder="What was this transaction for?" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+      @if (showError(form.controls.reason)) { <p class="mt-1.5 text-sm text-rose-600">Enter a reason for this transaction.</p> }
     </div>
 
     <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
