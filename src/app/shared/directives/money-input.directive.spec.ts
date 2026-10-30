@@ -10,6 +10,12 @@ describe('parseMoneyInput', () => {
     expect(parseMoneyInput('125', 'JPY')).toBe(125);
     expect(parseMoneyInput('1.23', 'JPY')).toBeNull();
     expect(parseMoneyInput('1.234', 'EUR')).toBeNull();
+    expect(parseMoneyInput('1.234', 'KWD')).toBe(1234);
+  });
+
+  it('accepts a decimal comma and preserves a negative sign', () => {
+    expect(parseMoneyInput('12,34')).toBe(1234);
+    expect(parseMoneyInput('-0.50')).toBe(-50);
   });
 
   it('rejects invalid and unsafe values', () => {

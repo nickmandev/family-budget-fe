@@ -6,10 +6,19 @@ import type { TransactionState } from './transaction.state';
 export const selectTransactionState =
   createFeatureSelector<TransactionState>('transactions');
 
-const { selectAll: selectAllTransactions } =
-  transactionAdapter.getSelectors(selectTransactionState);
+const {
+  selectAll: selectAllTransactions,
+  selectEntities: selectTransactionEntities,
+  selectIds: selectTransactionIds,
+  selectTotal: selectTransactionTotal,
+} = transactionAdapter.getSelectors(selectTransactionState);
 
-export { selectAllTransactions };
+export {
+  selectAllTransactions,
+  selectTransactionEntities,
+  selectTransactionIds,
+  selectTransactionTotal,
+};
 
 export const selectTransactionFilters = createSelector(
   selectTransactionState,
