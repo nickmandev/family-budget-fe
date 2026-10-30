@@ -1,0 +1,184 @@
+<div class="mx-auto max-w-2xl">
+  <div class="mb-8">
+    <a
+      routerLink="/accounts"
+      class="inline-flex items-center gap-1.5 text-sm font-medium text-violet-600 transition-colors hover:text-fuchsia-600"
+    >
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+      </svg>
+      Back to accounts
+    </a>
+    <h2 class="mt-4 text-2xl font-bold text-slate-900 md:text-3xl">
+      Edit Account
+    </h2>
+    @if (account(); as current) {
+      <p class="mt-1 flex flex-wrap items-center gap-2 text-slate-500">
+        Update the details for
+        <span class="font-medium text-slate-700">{{ current.name }}</span>
+        <span
+          class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+          [class]="kindBadgeClasses(current.kind)"
+        >
+          {{ kindLabel(current.kind) }}
+        </span>
+      </p>
+    } @else {
+      <p class="mt-1 text-slate-500">Update this account's details.</p>
+    }
+  </div>
+
+  @if (!householdLoading() && !householdId()) {
+    <div
+      class="rounded-2xl border border-dashed border-violet-200 bg-white p-10 text-center"
+    >
+      <h3 class="text-lg font-semibold text-slate-900">No household selected</h3>
+      <p class="mx-auto mt-2 max-w-md text-sm text-slate-500">
+        Choose or create a household before editing accounts.
+      </p>
+      <a
+        routerLink="/households"
+        class="mt-6 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600"
+      >
+        Go to households
+      </a>
+    </div>
+  } @else if (!account() && loading()) {
+    <div class="h-96 animate-pulse rounded-2xl border border-violet-100 bg-white"></div>
+  } @else if (!account()) {
+    <div
+      class="rounded-2xl border border-dashed border-violet-200 bg-white p-10 text-center"
+    >
+      <h3 class="text-lg font-semibold text-slate-900">Account not found</h3>
+      <p class="mx-auto mt-2 max-w-md text-sm text-slate-500">
+        The account may have been removed, or it belongs to a different
+        household.
+      </p>
+      <a
+        routerLink="/accounts"
+        class="mt-6 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600"
+      >
+        Back to accounts
+      </a>
+    </div>
+  } @else {
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      class="space-y-5 rounded-2xl border border-violet-100 bg-white p-6 shadow-sm md:p-8"
+      novalidate
+    >
+      @if (error()) {
+        <div
+          role="alert"
+          class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+        >
+          {{ error() }}
+        </div>
+      }
+
+      <div>
+        <label
+          for="account-edit-name"
+          class="mb-1.5 block text-sm font-medium text-slate-700"
+        >
+          Account name
+        </label>
+        <input
+          id="account-edit-name"
+          type="text"
+          formControlName="name"
+          autocomplete="off"
+          class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+          [class.border-rose-300]="showError(name)"
+          [attr.aria-invalid]="showError(name)"
+          [attr.aria-describedby]="
+            showError(name) ? 'account-edit-name-error' : null
+          "
+        />
+        @if (showError(name)) {
+          <p id="account-edit-name-error" class="mt-1.5 text-sm text-rose-600">
+            Account name is required.
+          </p>
+        }
+      </div>
+
+      <div
+        class="rounded-xl border border-violet-100 bg-violet-50/60 px-4 py-3"
+      >
+        <label
+          for="account-edit-archived"
+          class="flex cursor-pointer items-start gap-3"
+        >
+          <input
+            id="account-edit-archived"
+            type="checkbox"
+            formControlName="archived"
+            class="mt-0.5 h-4 w-4 rounded border-violet-300 text-violet-600 focus:ring-fuchsia-500/20"
+          />
+          <span>
+            <span class="block text-sm font-medium text-slate-900">
+              Archived
+            </span>
+            <span class="block text-sm text-slate-500">
+              Archived accounts are hidden from the default account list but
+              keep their history.
+            </span>
+          </span>
+        </label>
+      </div>
+
+      <div
+        class="rounded-xl border border-violet-100 bg-violet-50/60 px-4 py-3"
+      >
+        <label
+          for="account-edit-budget-eligible"
+          class="flex cursor-pointer items-start gap-3"
+        >
+          <input
+            id="account-edit-budget-eligible"
+            type="checkbox"
+            formControlName="budgetEligible"
+            class="mt-0.5 h-4 w-4 rounded border-violet-300 text-violet-600 focus:ring-fuchsia-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          />
+          <span>
+            <span class="block text-sm font-medium text-slate-900">
+              Budget eligible
+            </span>
+            <span class="block text-sm text-slate-500">
+              Include this account's balance in Budgetable Cash and Ready to
+              Assign.
+            </span>
+          </span>
+        </label>
+      </div>
+
+      <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+        <a
+          routerLink="/accounts"
+          class="inline-flex items-center justify-center rounded-xl border border-violet-200 bg-white px-5 py-3 font-medium text-violet-700 transition-colors hover:bg-violet-50"
+        >
+          Cancel
+        </a>
+        <button
+          type="submit"
+          [disabled]="saving() || !householdId()"
+          class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600 hover:shadow-xl hover:shadow-violet-500/35 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        >
+          @if (saving()) {
+            Saving…
+          } @else {
+            Save Changes
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>

@@ -26,6 +26,8 @@ interface NavItem {
 const ICONS = {
   dashboard:
     'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
+  accounts:
+    'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z',
   transactions:
     'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
   plans:
@@ -74,6 +76,7 @@ export class ShellComponent implements OnInit {
       icon: ICONS.dashboard,
       exact: true,
     },
+    { label: 'Accounts', path: '/accounts', icon: ICONS.accounts },
     { label: 'Transactions', path: '/transactions', icon: ICONS.transactions },
     { label: 'Plans', path: '/plans', icon: ICONS.plans },
     { label: 'Suggestions', path: '/suggestions', icon: ICONS.suggestions },

@@ -16,6 +16,7 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { idempotencyInterceptor } from './core/interceptors/idempotency.interceptor';
 import { requestIdInterceptor } from './core/interceptors/request-id.interceptor';
+import { AccountEffects } from './state/account/account.effects';
 import { AuthEffects } from './state/auth/auth.effects';
 import { BalanceEffects } from './state/balance/balance.effects';
 import { HouseholdEffects } from './state/household/household.effects';
@@ -35,7 +36,7 @@ export const appConfig: ApplicationConfig = {
     ),
     provideApiConfiguration(),
     provideStore(reducers, { metaReducers }),
-    provideEffects([AuthEffects, HouseholdEffects, BalanceEffects]),
+    provideEffects([AuthEffects, HouseholdEffects, AccountEffects, BalanceEffects]),
     provideAuthInitializer(),
     provideStoreDevtools({
       maxAge: 25,

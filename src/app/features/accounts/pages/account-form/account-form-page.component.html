@@ -1,0 +1,156 @@
+<div class="mx-auto max-w-2xl">
+  <div class="mb-8">
+    <a
+      routerLink="/accounts"
+      class="inline-flex items-center gap-1.5 text-sm font-medium text-violet-600 transition-colors hover:text-fuchsia-600"
+    >
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+      </svg>
+      Back to accounts
+    </a>
+    <h2 class="mt-4 text-2xl font-bold text-slate-900 md:text-3xl">
+      Add Account
+    </h2>
+    <p class="mt-1 text-slate-500">
+      @if (household(); as current) {
+        Create a new account for {{ current.name }}.
+      } @else {
+        Create a new account for your household.
+      }
+    </p>
+  </div>
+
+  @if (!householdLoading() && !householdId()) {
+    <div
+      class="rounded-2xl border border-dashed border-violet-200 bg-white p-10 text-center"
+    >
+      <h3 class="text-lg font-semibold text-slate-900">No household selected</h3>
+      <p class="mx-auto mt-2 max-w-md text-sm text-slate-500">
+        Choose or create a household before adding accounts.
+      </p>
+      <a
+        routerLink="/households"
+        class="mt-6 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600"
+      >
+        Go to households
+      </a>
+    </div>
+  } @else {
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      class="space-y-5 rounded-2xl border border-violet-100 bg-white p-6 shadow-sm md:p-8"
+      novalidate
+    >
+      @if (error()) {
+        <div
+          role="alert"
+          class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+        >
+          {{ error() }}
+        </div>
+      }
+
+      <div>
+        <label
+          for="account-name"
+          class="mb-1.5 block text-sm font-medium text-slate-700"
+        >
+          Account name
+        </label>
+        <input
+          id="account-name"
+          type="text"
+          formControlName="name"
+          autocomplete="off"
+          placeholder="e.g. Main checking"
+          class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+          [class.border-rose-300]="showError(name)"
+          [attr.aria-invalid]="showError(name)"
+          [attr.aria-describedby]="showError(name) ? 'account-name-error' : null"
+        />
+        @if (showError(name)) {
+          <p id="account-name-error" class="mt-1.5 text-sm text-rose-600">
+            Account name is required.
+          </p>
+        }
+      </div>
+
+      <div>
+        <label
+          for="account-kind"
+          class="mb-1.5 block text-sm font-medium text-slate-700"
+        >
+          Account type
+        </label>
+        <select
+          id="account-kind"
+          formControlName="kind"
+          class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+        >
+          @for (option of kindOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+        @if (form.controls.kind.value === creditCardKind) {
+          <p class="mt-1.5 text-sm text-slate-500">
+            Credit card liabilities cannot be budget eligible.
+          </p>
+        }
+      </div>
+
+      <div
+        class="rounded-xl border border-violet-100 bg-violet-50/60 px-4 py-3"
+      >
+        <label
+          for="account-budget-eligible"
+          class="flex cursor-pointer items-start gap-3"
+        >
+          <input
+            id="account-budget-eligible"
+            type="checkbox"
+            formControlName="budgetEligible"
+            class="mt-0.5 h-4 w-4 rounded border-violet-300 text-violet-600 focus:ring-fuchsia-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          />
+          <span>
+            <span class="block text-sm font-medium text-slate-900">
+              Budget eligible
+            </span>
+            <span class="block text-sm text-slate-500">
+              Include this account's balance in Budgetable Cash and Ready to
+              Assign.
+            </span>
+          </span>
+        </label>
+      </div>
+
+      <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+        <a
+          routerLink="/accounts"
+          class="inline-flex items-center justify-center rounded-xl border border-violet-200 bg-white px-5 py-3 font-medium text-violet-700 transition-colors hover:bg-violet-50"
+        >
+          Cancel
+        </a>
+        <button
+          type="submit"
+          [disabled]="saving() || !householdId()"
+          class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600 hover:shadow-xl hover:shadow-violet-500/35 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        >
+          @if (saving()) {
+            Creating…
+          } @else {
+            Create Account
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>

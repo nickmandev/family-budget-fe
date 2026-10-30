@@ -42,6 +42,38 @@ export const routes: Routes = [
         title: 'Dashboard · Family Budget',
       },
       {
+        path: 'accounts',
+        loadComponent: () =>
+          import(
+            './features/accounts/pages/account-list/account-list-page.component'
+          ).then((m) => m.AccountListPageComponent),
+        title: 'Accounts · Family Budget',
+      },
+      {
+        path: 'accounts/new',
+        loadComponent: () =>
+          import(
+            './features/accounts/pages/account-form/account-form-page.component'
+          ).then((m) => m.AccountFormPageComponent),
+        title: 'Add account · Family Budget',
+      },
+      {
+        path: 'accounts/:id',
+        loadComponent: () =>
+          import(
+            './features/accounts/pages/account-detail/account-detail-page.component'
+          ).then((m) => m.AccountDetailPageComponent),
+        title: 'Account · Family Budget',
+      },
+      {
+        path: 'accounts/:id/edit',
+        loadComponent: () =>
+          import(
+            './features/accounts/pages/account-edit/account-edit-page.component'
+          ).then((m) => m.AccountEditPageComponent),
+        title: 'Edit account · Family Budget',
+      },
+      {
         path: 'households',
         loadComponent: () =>
           import(

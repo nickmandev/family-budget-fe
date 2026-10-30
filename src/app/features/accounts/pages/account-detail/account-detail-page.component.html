@@ -1,0 +1,390 @@
+<div>
+  <div
+    class="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+  >
+    <div>
+      <a
+        routerLink="/accounts"
+        class="inline-flex items-center gap-1.5 text-sm font-medium text-violet-600 transition-colors hover:text-fuchsia-600"
+      >
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to accounts
+      </a>
+      <h2 class="mt-4 text-2xl font-bold text-slate-900 md:text-3xl">
+        {{ account()?.name ?? 'Account' }}
+      </h2>
+      <p class="mt-1 text-slate-500">Account details and transaction history.</p>
+    </div>
+
+    @if (account(); as current) {
+      <a
+        [routerLink]="['/accounts', current.id, 'edit']"
+        class="inline-flex items-center justify-center rounded-xl border border-violet-200 bg-white px-5 py-3 font-medium text-violet-700 transition-colors hover:bg-violet-50"
+      >
+        Edit account
+      </a>
+    }
+  </div>
+
+  @if (householdLoading() && !hasHousehold()) {
+    <div class="space-y-6">
+      <div
+        class="h-44 animate-pulse rounded-2xl border border-violet-100 bg-white"
+      ></div>
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div
+          class="h-80 animate-pulse rounded-2xl border border-violet-100 bg-white"
+        ></div>
+        <div
+          class="h-80 animate-pulse rounded-2xl border border-violet-100 bg-white xl:col-span-2"
+        ></div>
+      </div>
+    </div>
+  } @else if (!hasHousehold()) {
+    <div
+      class="rounded-2xl border border-dashed border-violet-200 bg-white p-10 text-center"
+    >
+      <h3 class="text-lg font-semibold text-slate-900">No household selected</h3>
+      <p class="mx-auto mt-2 max-w-md text-sm text-slate-500">
+        Choose or create a household to view its accounts.
+      </p>
+      <a
+        routerLink="/households"
+        class="mt-6 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600"
+      >
+        Go to households
+      </a>
+    </div>
+  } @else if (!account() && loading()) {
+    <div class="space-y-6">
+      <div
+        class="h-44 animate-pulse rounded-2xl border border-violet-100 bg-white"
+      ></div>
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div
+          class="h-80 animate-pulse rounded-2xl border border-violet-100 bg-white"
+        ></div>
+        <div
+          class="h-80 animate-pulse rounded-2xl border border-violet-100 bg-white xl:col-span-2"
+        ></div>
+      </div>
+    </div>
+  } @else if (!account()) {
+    <div
+      class="rounded-2xl border border-dashed border-violet-200 bg-white p-10 text-center"
+    >
+      <h3 class="text-lg font-semibold text-slate-900">Account not found</h3>
+      <p class="mx-auto mt-2 max-w-md text-sm text-slate-500">
+        The account may have been removed, or it belongs to a different
+        household.
+      </p>
+      <a
+        routerLink="/accounts"
+        class="mt-6 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600"
+      >
+        Back to accounts
+      </a>
+    </div>
+  } @else {
+    @if (account(); as current) {
+    <div class="space-y-6">
+      <section
+        class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm"
+      >
+        <div class="flex items-start gap-4">
+          <div
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
+            [class]="kindIconClasses(current.kind)"
+          >
+            <svg
+              class="h-7 w-7"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 class="text-xl font-semibold text-slate-900">
+                {{ current.name }}
+              </h3>
+              <span
+                class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+                [class]="kindBadgeClasses(current.kind)"
+              >
+                {{ kindLabel(current.kind) }}
+              </span>
+              <span
+                class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+                [class]="statusBadgeClasses(current.status)"
+              >
+                {{ statusLabel(current.status) }}
+              </span>
+            </div>
+
+            <dl class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Account type
+                </dt>
+                <dd class="mt-1 text-sm font-medium text-slate-900">
+                  {{ kindLabel(current.kind) }}
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Budget eligibility
+                </dt>
+                <dd class="mt-1">
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+                    [class]="eligibilityClasses(current.budget_eligible)"
+                  >
+                    <span
+                      class="h-1.5 w-1.5 rounded-full bg-current"
+                      aria-hidden="true"
+                    ></span>
+                    {{ eligibilityLabel(current.budget_eligible) }}
+                  </span>
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Status
+                </dt>
+                <dd class="mt-1 text-sm font-medium text-slate-900">
+                  {{ statusLabel(current.status) }}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <section
+          class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm"
+        >
+          <h3 class="text-lg font-semibold text-slate-900">Opening Balance</h3>
+          <p class="mt-1 text-sm text-slate-500">
+            Record the starting balance for this account. Amounts are stored in
+            {{ currency() }} minor units.
+          </p>
+
+          <form
+            [formGroup]="form"
+            (ngSubmit)="onSubmit()"
+            class="mt-5 space-y-4"
+            novalidate
+          >
+            @if (error()) {
+              <div
+                role="alert"
+                class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+              >
+                {{ error() }}
+              </div>
+            }
+
+            <div>
+              <label
+                for="opening-balance-amount"
+                class="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                Amount
+              </label>
+              <div class="relative">
+                <span
+                  class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-400"
+                >
+                  {{ currency() }}
+                </span>
+                <input
+                  id="opening-balance-amount"
+                  type="number"
+                  inputmode="decimal"
+                  step="0.01"
+                  formControlName="amount"
+                  placeholder="0.00"
+                  class="w-full rounded-xl border border-violet-200 py-3 pl-16 pr-4 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+                  [class.border-rose-300]="showError(amount)"
+                  [attr.aria-invalid]="showError(amount)"
+                  [attr.aria-describedby]="
+                    showError(amount) ? 'opening-balance-amount-error' : null
+                  "
+                />
+              </div>
+              @if (showError(amount)) {
+                <p
+                  id="opening-balance-amount-error"
+                  class="mt-1.5 text-sm text-rose-600"
+                >
+                  @if (amount.hasError('required')) {
+                    Enter an amount.
+                  } @else if (amount.hasError('zero')) {
+                    Enter a non-zero amount.
+                  } @else {
+                    Enter a valid amount.
+                  }
+                </p>
+              }
+            </div>
+
+            <div>
+              <label
+                for="opening-balance-date"
+                class="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                Effective date
+              </label>
+              <input
+                id="opening-balance-date"
+                type="date"
+                formControlName="effectiveDate"
+                class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+                [class.border-rose-300]="showError(effectiveDate)"
+                [attr.aria-invalid]="showError(effectiveDate)"
+              />
+              @if (showError(effectiveDate)) {
+                <p class="mt-1.5 text-sm text-rose-600">
+                  Choose an effective date.
+                </p>
+              }
+            </div>
+
+            <div>
+              <label
+                for="opening-balance-reason"
+                class="mb-1.5 block text-sm font-medium text-slate-700"
+              >
+                Reason <span class="font-normal text-slate-400">(optional)</span>
+              </label>
+              <textarea
+                id="opening-balance-reason"
+                formControlName="reason"
+                rows="2"
+                placeholder="e.g. Balance carried over from old bank"
+                class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+              ></textarea>
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="saving()"
+              class="w-full rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600 hover:shadow-xl hover:shadow-violet-500/35 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+            >
+              @if (saving()) {
+                Recording…
+              } @else {
+                Record Opening Balance
+              }
+            </button>
+          </form>
+        </section>
+
+        <section
+          class="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm xl:col-span-2"
+        >
+          <div class="border-b border-violet-100 px-6 py-5">
+            <h3 class="text-lg font-semibold text-slate-900">
+              Transaction History
+            </h3>
+            <p class="mt-1 text-sm text-slate-500">
+              Transactions involving this account. Full server-side filtering
+              arrives with the transactions feature.
+            </p>
+          </div>
+
+          @if (transactionsLoading()) {
+            <div class="space-y-3 p-6">
+              @for (placeholder of [1, 2, 3]; track placeholder) {
+                <div class="h-14 animate-pulse rounded-xl bg-violet-50"></div>
+              }
+            </div>
+          } @else if (accountTransactions().length === 0) {
+            <div class="px-6 py-12 text-center text-sm text-slate-500">
+              No transactions yet. Open the account with an opening balance to
+              get started.
+            </div>
+          } @else {
+            <div class="divide-y divide-violet-50">
+              @for (
+                transaction of accountTransactions();
+                track transaction.id
+              ) {
+                <div
+                  class="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-violet-50/50"
+                >
+                  <div class="flex min-w-0 items-center gap-4">
+                    <div
+                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+                      [class]="transactionBadgeClasses(transaction)"
+                    >
+                      <svg
+                        class="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div class="min-w-0">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <p class="truncate font-medium text-slate-900">
+                          {{ transactionLabel(transaction) }}
+                        </p>
+                        <span
+                          class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+                          [class]="transactionBadgeClasses(transaction)"
+                        >
+                          {{ transactionTypeLabel(transaction) }}
+                        </span>
+                      </div>
+                      <p class="text-xs text-slate-500">
+                        {{ transactionDate(transaction) }}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    class="shrink-0 font-semibold"
+                    [class]="transactionAmountClasses(transaction)"
+                  >
+                    {{
+                      transactionAccountDelta(transaction)
+                        | money: currency() : 'always'
+                    }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      </div>
+    </div>
+    }
+  }
+</div>
