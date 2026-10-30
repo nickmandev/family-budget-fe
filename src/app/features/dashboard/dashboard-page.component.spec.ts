@@ -52,6 +52,10 @@ describe('DashboardPageComponent', () => {
     }).compileComponents();
   });
 
+  afterEach(() => {
+    TestBed.inject(MockStore).resetSelectors();
+  });
+
   it('renders its empty household state without throwing', () => {
     const fixture = TestBed.createComponent(DashboardPageComponent);
 
