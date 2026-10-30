@@ -1,0 +1,202 @@
+<div class="min-h-screen bg-violet-50">
+  <header
+    class="sticky top-0 z-40 flex h-16 items-center justify-between bg-violet-950 px-4 text-white shadow-lg md:px-6"
+  >
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        class="rounded-lg p-2 text-violet-200 transition-colors hover:bg-violet-900 md:hidden"
+        (click)="openSidebar()"
+        aria-label="Open navigation"
+      >
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+      <div
+        class="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-bold md:hidden"
+      >
+        FB
+      </div>
+      <h1 class="hidden text-lg font-semibold tracking-tight md:block">
+        Family Budget
+      </h1>
+    </div>
+
+    <div class="flex items-center gap-3 md:gap-5">
+      <app-household-switcher />
+
+      <button
+        type="button"
+        class="relative rounded-lg p-2 text-violet-200 transition-all hover:bg-violet-900"
+        aria-label="Notifications"
+      >
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          />
+        </svg>
+        <span
+          class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-fuchsia-500"
+        ></span>
+      </button>
+
+      <div
+        class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 text-sm font-semibold ring-2 ring-violet-400/50 md:h-9 md:w-9"
+        [attr.title]="userEmail()"
+      >
+        {{ initials() }}
+      </div>
+    </div>
+  </header>
+
+  <div class="flex">
+    <aside
+      class="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 flex-col bg-violet-950 text-white md:flex"
+    >
+      <ng-container [ngTemplateOutlet]="sidebarNav" />
+    </aside>
+
+    <main class="min-w-0 flex-1 p-4 pb-24 md:p-8 md:pb-8">
+      <div class="mx-auto w-full max-w-7xl">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+
+  @if (sidebarOpen()) {
+    <div class="fixed inset-0 z-50 md:hidden">
+      <button
+        type="button"
+        class="absolute inset-0 h-full w-full bg-violet-950/60 backdrop-blur-sm"
+        (click)="closeSidebar()"
+        aria-label="Close navigation"
+      ></button>
+      <aside
+        class="relative flex h-full w-64 flex-col bg-violet-950 text-white shadow-2xl"
+      >
+        <div
+          class="flex h-16 items-center justify-between border-b border-violet-900 px-4"
+        >
+          <span class="text-sm font-semibold">Family Budget</span>
+          <button
+            type="button"
+            class="rounded-lg p-2 text-violet-300 transition-colors hover:bg-violet-900 hover:text-white"
+            (click)="closeSidebar()"
+            aria-label="Close navigation"
+          >
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <ng-container [ngTemplateOutlet]="sidebarNav" />
+      </aside>
+    </div>
+  }
+
+  <nav
+    class="fixed bottom-0 left-0 right-0 z-40 flex justify-around border-t border-violet-100 bg-white py-2 md:hidden"
+  >
+    @for (item of bottomNavItems(); track item.path) {
+      <a
+        [routerLink]="item.path"
+        routerLinkActive="text-violet-600"
+        [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+        class="flex flex-col items-center gap-1 p-2 text-slate-400 transition-colors"
+      >
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="item.icon" />
+        </svg>
+        <span class="text-[10px]">{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+</div>
+
+<ng-template #sidebarNav>
+  <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-6">
+    @for (item of navItems(); track item.path) {
+      <a
+        [routerLink]="item.path"
+        routerLinkActive="bg-gradient-to-r from-violet-800 to-violet-900 border-l-4 border-fuchsia-500 text-white shadow-lg shadow-violet-950/50"
+        [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+        (click)="closeSidebar()"
+        class="flex items-center gap-3 rounded-xl px-4 py-3 text-violet-200 transition-all hover:bg-violet-900/70 hover:text-white"
+      >
+        <svg
+          class="h-5 w-5 shrink-0"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="item.icon" />
+        </svg>
+        <span class="font-medium">{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+  <div class="border-t border-violet-900 p-4">
+    <button
+      type="button"
+      (click)="logout()"
+      class="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-violet-300 transition-all hover:bg-violet-900/70 hover:text-white"
+    >
+      <svg
+        class="h-5 w-5 shrink-0"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+        />
+      </svg>
+      <span>Sign out</span>
+    </button>
+  </div>
+</ng-template>
