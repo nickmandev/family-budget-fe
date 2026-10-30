@@ -20,6 +20,7 @@ import { AccountEffects } from './state/account/account.effects';
 import { AuthEffects } from './state/auth/auth.effects';
 import { BalanceEffects } from './state/balance/balance.effects';
 import { HouseholdEffects } from './state/household/household.effects';
+import { EnvelopeEffects } from './state/envelope/envelope.effects';
 import { metaReducers, reducers } from './state/app.state';
 
 export const appConfig: ApplicationConfig = {
@@ -36,7 +37,13 @@ export const appConfig: ApplicationConfig = {
     ),
     provideApiConfiguration(),
     provideStore(reducers, { metaReducers }),
-    provideEffects([AuthEffects, HouseholdEffects, AccountEffects, BalanceEffects]),
+    provideEffects([
+      AuthEffects,
+      HouseholdEffects,
+      AccountEffects,
+      BalanceEffects,
+      EnvelopeEffects,
+    ]),
     provideAuthInitializer(),
     provideStoreDevtools({
       maxAge: 25,

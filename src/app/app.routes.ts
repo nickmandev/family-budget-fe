@@ -50,6 +50,46 @@ export const routes: Routes = [
         title: 'Accounts · Family Budget',
       },
       {
+        path: 'envelopes',
+        loadComponent: () =>
+          import(
+            './features/envelopes/pages/envelope-list/envelope-list-page.component'
+          ).then((m) => m.EnvelopeListPageComponent),
+        title: 'Envelopes · Family Budget',
+      },
+      {
+        path: 'envelopes/new',
+        loadComponent: () =>
+          import(
+            './features/envelopes/pages/envelope-form/envelope-form-page.component'
+          ).then((m) => m.EnvelopeFormPageComponent),
+        title: 'Add envelope · Family Budget',
+      },
+      {
+        path: 'envelopes/:id/edit',
+        loadComponent: () =>
+          import(
+            './features/envelopes/pages/envelope-edit/envelope-edit-page.component'
+          ).then((m) => m.EnvelopeEditPageComponent),
+        title: 'Edit envelope · Family Budget',
+      },
+      {
+        path: 'envelopes/allocate',
+        loadComponent: () =>
+          import(
+            './features/envelopes/pages/allocate-funds/allocate-funds-page.component'
+          ).then((m) => m.AllocateFundsPageComponent),
+        title: 'Allocate funds · Family Budget',
+      },
+      {
+        path: 'envelopes/reallocate',
+        loadComponent: () =>
+          import(
+            './features/envelopes/pages/reallocate-funds/reallocate-funds-page.component'
+          ).then((m) => m.ReallocateFundsPageComponent),
+        title: 'Reallocate funds · Family Budget',
+      },
+      {
         path: 'accounts/new',
         loadComponent: () =>
           import(

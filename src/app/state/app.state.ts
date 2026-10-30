@@ -8,6 +8,8 @@ import { balanceReducer } from './balance/balance.reducer';
 import type { BalanceState } from './balance/balance.state';
 import { householdReducer } from './household/household.reducer';
 import type { HouseholdState } from './household/household.state';
+import { envelopeReducer } from './envelope/envelope.reducer';
+import type { EnvelopeState } from './envelope/envelope.state';
 
 /** Root application state. */
 export interface AppState {
@@ -15,6 +17,7 @@ export interface AppState {
   households: HouseholdState;
   accounts: AccountState;
   balances: BalanceState;
+  envelopes: EnvelopeState;
 }
 
 export const reducers: ActionReducerMap<AppState> = {
@@ -22,6 +25,7 @@ export const reducers: ActionReducerMap<AppState> = {
   households: householdReducer,
   accounts: accountReducer,
   balances: balanceReducer,
+  envelopes: envelopeReducer,
 };
 
 export const metaReducers: MetaReducer<AppState>[] = [];
