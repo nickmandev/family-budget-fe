@@ -1,0 +1,3 @@
+name = "family-budget-fe"
+pages_build_output_dir = "dist/family-budget-fe/browser"
+compatibility_date = "2026-10-30"
