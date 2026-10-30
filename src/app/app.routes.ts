@@ -106,6 +106,30 @@ export const routes: Routes = [
         title: 'Transactions · Family Budget',
       },
       {
+        path: 'plans/new',
+        loadComponent: () =>
+          import('./features/plans/plan-form-page.component').then(
+            (m) => m.PlanFormPageComponent,
+          ),
+        title: 'New plan · Family Budget',
+      },
+      {
+        path: 'plans/:id',
+        loadComponent: () =>
+          import('./features/plans/plan-detail-page.component').then(
+            (m) => m.PlanDetailPageComponent,
+          ),
+        title: 'Plan · Family Budget',
+      },
+      {
+        path: 'plans',
+        loadComponent: () =>
+          import('./features/plans/plan-list-page.component').then(
+            (m) => m.PlanListPageComponent,
+          ),
+        title: 'Plans · Family Budget',
+      },
+      {
         path: 'accounts/new',
         loadComponent: () =>
           import(

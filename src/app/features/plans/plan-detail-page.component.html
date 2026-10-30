@@ -1,0 +1,144 @@
+<div class="mx-auto max-w-5xl">
+  <div class="mb-8">
+    <a routerLink="/plans" class="inline-flex items-center gap-1.5 text-sm font-medium text-violet-600 transition-colors hover:text-fuchsia-600">Back to plans</a>
+    @if (plan(); as current) {
+      <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900 md:text-3xl">{{ current.kind === 'PURCHASE' ? 'Purchase plan' : 'Repayment plan' }}</h2>
+          <p class="mt-1 text-slate-500">{{ envelopeName(current.target_envelope_id) }}</p>
+        </div>
+        <span class="w-fit rounded-full px-3 py-1.5 text-sm font-semibold" [class]="stateClass(current.state)">{{ current.state.replaceAll('_', ' ') }}</span>
+      </div>
+    } @else {
+      <h2 class="mt-4 text-2xl font-bold text-slate-900 md:text-3xl">Plan details</h2>
+    }
+  </div>
+
+  @if (error()) { <div role="alert" class="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ error() }}</div> }
+  @if (loading() && !plan()) {
+    <div class="rounded-2xl border border-violet-100 bg-white p-8 text-center text-slate-500">Loading plan…</div>
+  } @else {
+    @if (plan(); as current) {
+    <section class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm md:p-8">
+      <h3 class="text-lg font-semibold text-slate-900">Plan information</h3>
+      <dl class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div><dt class="text-sm text-slate-500">Kind</dt><dd class="mt-1 font-semibold text-slate-900">{{ current.kind }}</dd></div>
+        <div><dt class="text-sm text-slate-500">Target envelope</dt><dd class="mt-1 font-semibold text-slate-900">{{ envelopeName(current.target_envelope_id) }}</dd></div>
+        <div><dt class="text-sm text-slate-500">Target account</dt><dd class="mt-1 font-semibold text-slate-900">{{ accountName(current.target_account_id) }}</dd></div>
+        <div><dt class="text-sm text-slate-500">Intended amount</dt><dd class="mt-1 font-semibold tabular-nums text-slate-900">{{ current.intended_amount_minor | money: (household()?.currency ?? 'EUR') }}</dd></div>
+        <div><dt class="text-sm text-slate-500">Authorized amount</dt><dd class="mt-1 font-semibold tabular-nums text-slate-900">{{ current.authorized_amount_minor | money: (household()?.currency ?? 'EUR') }}</dd></div>
+        <div><dt class="text-sm text-slate-500">Held in envelope</dt><dd class="mt-1 font-semibold tabular-nums text-fuchsia-700">{{ current.held_amount_minor | money: (household()?.currency ?? 'EUR') }}</dd></div>
+        <div><dt class="text-sm text-slate-500">Held on account</dt><dd class="mt-1 font-semibold tabular-nums text-slate-900">{{ current.held_on_account_minor | money: (household()?.currency ?? 'EUR') }}</dd></div>
+        <div><dt class="text-sm text-slate-500">Authorization mode</dt><dd class="mt-1 font-semibold text-slate-900">{{ current.mode ?? '—' }}</dd></div>
+        <div class="sm:col-span-2 lg:col-span-3"><dt class="text-sm text-slate-500">Reason</dt><dd class="mt-1 whitespace-pre-wrap text-slate-900">{{ current.reason || '—' }}</dd></div>
+      </dl>
+    </section>
+
+    @if (operation(); as relatedOperation) {
+      <section class="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+        <h3 class="font-semibold text-emerald-900">Related operation</h3>
+        <p class="mt-2 text-sm text-emerald-800">{{ relatedOperation.type.replaceAll('_', ' ') }} · {{ relatedOperation.effective_date }} · {{ relatedOperation.amount_minor | money: relatedOperation.currency }}</p>
+        @if (relatedOperation.reason) { <p class="mt-1 text-sm text-emerald-800">{{ relatedOperation.reason }}</p> }
+      </section>
+    }
+
+    @if (current.state === planStates.DRAFT) {
+      <section id="authorize" class="mt-6 rounded-2xl border border-violet-100 bg-white p-6 shadow-sm md:p-8">
+        <h3 class="text-lg font-semibold text-slate-900">Authorize plan</h3>
+        <p class="mt-1 text-sm text-slate-500">Authorization reserves funds but does not record a purchase.</p>
+        <form [formGroup]="authorizeForm" (ngSubmit)="authorize()" class="mt-5 grid gap-4 md:grid-cols-2">
+          <div>
+            <label for="authorize-mode" class="mb-1.5 block text-sm font-medium text-slate-700">Authorization mode</label>
+            <select id="authorize-mode" formControlName="mode" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+              @for (mode of modes; track mode) { <option [value]="mode">{{ mode.replaceAll('_', ' ') }}</option> }
+            </select>
+          </div>
+          @if (isEmergencyAuthorize()) {
+            <div>
+              <label for="authorize-reason" class="mb-1.5 block text-sm font-medium text-slate-700">Override reason <span class="text-rose-600">*</span></label>
+              <textarea id="authorize-reason" formControlName="reason" rows="2" required class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"></textarea>
+            </div>
+          }
+          <div>
+            <label for="reallocation-source" class="mb-1.5 block text-sm font-medium text-slate-700">Reallocate from envelope (optional)</label>
+            <select id="reallocation-source" formControlName="sourceEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+              <option value="">No reallocation</option>
+              @for (envelope of envelopes(); track envelope.id) { @if (envelope.id !== current.target_envelope_id) { <option [value]="envelope.id">{{ envelope.name }}</option> } }
+            </select>
+          </div>
+          <div>
+            <label for="reallocation-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Reallocation amount (optional)</label>
+            <input id="reallocation-amount" type="text" inputmode="decimal" [appMoneyInput]="household()?.currency ?? 'EUR'" formControlName="reallocationAmountMinor" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+          </div>
+          <div class="md:col-span-2">
+            @if (isEmergencyAuthorize()) { <p class="mb-3 text-sm text-amber-700">An emergency override requires a non-blank audit reason.</p> }
+            <button type="submit" [disabled]="authorizeDisabled()" class="inline-flex rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">{{ authorizing() ? 'Authorizing…' : 'Authorize plan' }}</button>
+          </div>
+        </form>
+      </section>
+    }
+
+    @if (current.state === planStates.RESERVED || current.state === planStates.RESERVED_EXCEPTION) {
+      <section id="actions" class="mt-6 grid gap-6 xl:grid-cols-2">
+        <form [formGroup]="resizeForm" (ngSubmit)="resize()" class="space-y-4 rounded-2xl border border-violet-100 bg-white p-6 shadow-sm">
+          <div><h3 class="text-lg font-semibold text-slate-900">Resize reservation</h3><p class="mt-1 text-sm text-slate-500">Set the new authorized amount.</p></div>
+          <div>
+            <label for="resize-amount" class="mb-1.5 block text-sm font-medium text-slate-700">New amount</label>
+            <input id="resize-amount" type="text" inputmode="decimal" [appMoneyInput]="household()?.currency ?? 'EUR'" formControlName="amountMinor" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+          </div>
+          <div>
+            <label for="resize-mode" class="mb-1.5 block text-sm font-medium text-slate-700">Mode</label>
+            <select id="resize-mode" formControlName="mode" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+              @for (mode of modes; track mode) { <option [value]="mode">{{ mode.replaceAll('_', ' ') }}</option> }
+            </select>
+          </div>
+          @if (isEmergencyResize()) { <div><label for="resize-reason" class="mb-1.5 block text-sm font-medium text-slate-700">Override reason <span class="text-rose-600">*</span></label><textarea id="resize-reason" formControlName="reason" rows="2" required class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"></textarea></div> }
+          <button type="submit" [disabled]="resizeDisabled()" class="inline-flex rounded-xl border border-violet-200 bg-white px-5 py-3 font-medium text-violet-700 disabled:cursor-not-allowed disabled:opacity-60">{{ resizing() ? 'Resizing…' : 'Resize plan' }}</button>
+        </form>
+
+        <form [formGroup]="completeForm" (ngSubmit)="complete()" class="space-y-4 rounded-2xl border border-violet-100 bg-white p-6 shadow-sm">
+          <div><h3 class="text-lg font-semibold text-slate-900">Complete plan</h3><p class="mt-1 text-sm text-slate-500">Completion posts one committed purchase or repayment.</p></div>
+          <div>
+            <label for="complete-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Final amount</label>
+            <input id="complete-amount" type="text" inputmode="decimal" [appMoneyInput]="household()?.currency ?? 'EUR'" formControlName="finalAmountMinor" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+          </div>
+          <div>
+            <label for="purchase-kind" class="mb-1.5 block text-sm font-medium text-slate-700">Purchase kind</label>
+            <select id="purchase-kind" formControlName="purchaseKind" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+              @for (kind of purchaseKinds; track kind) { <option [value]="kind">{{ kind }}</option> }
+            </select>
+          </div>
+          @if (isCardCompletion()) {
+            <div>
+              <label for="complete-card" class="mb-1.5 block text-sm font-medium text-slate-700">Card account <span class="text-rose-600">*</span></label>
+              <select id="complete-card" formControlName="cardAccountId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+                <option value="">Choose a card</option>
+                @for (account of cardAccounts(); track account.id) { <option [value]="account.id">{{ account.name }}</option> }
+              </select>
+            </div>
+            <div>
+              <label for="complete-payment-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Payment envelope <span class="text-rose-600">*</span></label>
+              <select id="complete-payment-envelope" formControlName="paymentEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+                <option value="">Choose an envelope</option>
+                @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+              </select>
+            </div>
+          }
+          <button type="submit" [disabled]="completeDisabled()" class="inline-flex rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">{{ completing() ? 'Completing…' : 'Complete plan' }}</button>
+        </form>
+
+        <form [formGroup]="cancelForm" (ngSubmit)="cancel()" class="space-y-4 rounded-2xl border border-rose-100 bg-white p-6 shadow-sm xl:col-span-2">
+          <div><h3 class="text-lg font-semibold text-slate-900">Cancel plan</h3><p class="mt-1 text-sm text-slate-500">Releases any holds without posting an expense. A reason is required.</p></div>
+          <div class="max-w-xl">
+            <label for="cancel-reason" class="mb-1.5 block text-sm font-medium text-slate-700">Cancellation reason <span class="text-rose-600">*</span></label>
+            <textarea id="cancel-reason" formControlName="reason" rows="2" required class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"></textarea>
+          </div>
+          <button type="submit" [disabled]="cancelling() || !cancelForm.controls.reason.value.trim()" class="inline-flex rounded-xl border border-rose-200 bg-rose-50 px-5 py-3 font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-60">{{ cancelling() ? 'Cancelling…' : 'Cancel plan' }}</button>
+        </form>
+      </section>
+    }
+    } @else {
+      <div class="rounded-2xl border border-violet-100 bg-white p-8 text-center text-slate-500">Plan not found.</div>
+    }
+  }
+</div>
