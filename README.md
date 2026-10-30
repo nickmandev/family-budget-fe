@@ -57,7 +57,7 @@ API base URL is configured per environment and imported from
 | Environment | File | `apiBaseUrl` |
 |---|---|---|
 | Development | `src/environments/environment.ts` | `http://localhost:8080/api/v1` |
-| Production | `src/environments/environment.prod.ts` | `/api/v1` |
+| Production | `src/environments/environment.prod.ts` | `https://budget-api.nickmandev.com/api/v1` |
 
 The production file is swapped in automatically during a production build
 (`angular.json` → `configurations.production.fileReplacements`).

@@ -5,8 +5,8 @@ import { provideApi } from './generated';
 
 /**
  * Provides the generated OpenAPI client configured with the environment's API
- * base path (`http://localhost:8080/api/v1` in development, `/api/v1` in
- * production).
+ * base path (`http://localhost:8080/api/v1` in development,
+ * `https://budget-api.nickmandev.com/api/v1` in production).
  *
  * Authentication is handled by `authInterceptor`; the generated client does
  * not own the token.

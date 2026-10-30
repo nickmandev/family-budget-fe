@@ -1,5 +1,5 @@
 // Production environment defaults.
 export const environment = {
   production: true,
-  apiBaseUrl: '/api/v1',
+  apiBaseUrl: 'https://budget-api.nickmandev.com/api/v1',
 };

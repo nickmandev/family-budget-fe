@@ -26,21 +26,19 @@ so deep links such as `/transactions` continue to load after refresh.
 
 ## API configuration
 
-Production builds use the relative API base URL `/api/v1` (see
-`src/environments/environment.prod.ts`). Configure a reverse proxy at the
-Pages domain to route `/api/v1/*` to the Go API, or change the production API
-URL to the API's HTTPS origin and enable CORS on the Go API. If using a
-cross-origin API, its CORS allow-list must include the exact deployed Pages
-origin and any custom domain (for example, `https://family-budget-fe.pages.dev`
-and `https://budget.example.com`). The API must allow the frontend's required
-methods and headers, including `Authorization`, `Content-Type`, `Idempotency-Key`
-and `X-Request-ID`, and support credentials only if the API's auth setup
-requires them.
+Production builds call `https://budget-api.nickmandev.com/api/v1` directly (see
+`src/environments/environment.prod.ts`). The frontend is hosted on Cloudflare
+Pages and calls the Hetzner-hosted Go API cross-origin; no Pages reverse proxy
+for `/api/v1` is used. Configure the API's CORS allow-list for the deployed
+Pages origin (`https://<pages-domain>`) and any custom frontend domain. Allow
+the request headers `Authorization`, `Content-Type`, `Idempotency-Key`, and
+`X-Request-ID`. The API should return `X-Request-ID` on responses and expose it
+through CORS (for example, with `Access-Control-Expose-Headers: X-Request-ID`)
+when the frontend needs to read it. Ensure CORS preflight `OPTIONS` requests
+are handled for the mutation endpoints and their allowed methods and headers.
 
-The production API URL is compiled into the Angular build. Set the desired
-`apiBaseUrl` in `src/environments/environment.prod.ts` before building when the
-API is hosted on a separate origin; do not put secrets in frontend environment
-files.
+The production API URL is compiled into the Angular build. Do not put secrets
+in frontend environment files.
 
 ## Custom domain
 
