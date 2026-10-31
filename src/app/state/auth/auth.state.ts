@@ -1,5 +1,15 @@
 import type { Membership, User } from '../../core/api/generated';
-import { readExpiresAt, readToken } from '../../core/auth/auth.storage';
+import {
+  clearSession,
+  hasValidSession,
+  readExpiresAt,
+  readToken,
+} from '../../core/auth/auth.storage';
+
+const validSession = hasValidSession();
+if (!validSession) {
+  clearSession();
+}
 
 export interface AuthState {
   user: User | null;
@@ -17,8 +27,8 @@ export interface AuthState {
 export const initialAuthState: AuthState = {
   user: null,
   memberships: [],
-  token: readToken(),
-  expiresAt: readExpiresAt(),
+  token: validSession ? readToken() : null,
+  expiresAt: validSession ? readExpiresAt() : null,
   loading: false,
   error: null,
 };

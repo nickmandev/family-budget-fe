@@ -14,5 +14,9 @@ export function storeSelectedHouseholdId(id: string | null): void {
     return;
   }
 
+  clearSelectedHouseholdId();
+}
+
+export function clearSelectedHouseholdId(): void {
   localStorage.removeItem(HOUSEHOLD_SELECTION_STORAGE_KEY);
 }

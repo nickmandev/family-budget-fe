@@ -11,7 +11,16 @@ export const selectUser = createSelector(
 
 export const selectIsAuthenticated = createSelector(
   selectAuthState,
-  (state) => state.token !== null,
+  (state) => {
+    if (!state.token) {
+      return false;
+    }
+    if (!state.expiresAt) {
+      return true;
+    }
+    const expiry = Date.parse(state.expiresAt);
+    return Number.isNaN(expiry) || expiry > Date.now();
+  },
 );
 
 export const selectLoading = createSelector(
