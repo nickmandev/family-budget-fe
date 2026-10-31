@@ -8,6 +8,7 @@ import { map } from 'rxjs';
 import { AccountKind, AuthorizationMode, LifecycleStatus, PlanState, PurchaseKind } from '../../core/api/generated';
 import { MoneyInputDirective } from '../../shared/directives/money-input.directive';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
+import { todayInTimeZone } from '../../shared/utils/date';
 import * as AccountActions from '../../state/account/account.actions';
 import { selectAllAccounts } from '../../state/account/account.selectors';
 import * as EnvelopeActions from '../../state/envelope/envelope.actions';
@@ -24,17 +25,6 @@ import {
   selectSelectedPlan,
 } from '../../state/plan/plan.selectors';
 import { selectCurrentHousehold } from '../../state/household/household.selectors';
-
-function effectiveDate(timezone: string): string {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? '';
-  return `${value('year')}-${value('month')}-${value('day')}`;
-}
 
 @Component({
   selector: 'app-plan-detail-page',
@@ -148,7 +138,7 @@ export class PlanDetailPageComponent {
       householdId: household.id,
       planId: plan.id,
       request: {
-        effective_date: effectiveDate(household.timezone),
+        effective_date: todayInTimeZone(household.timezone),
         mode: value.mode,
         ...(value.reason.trim() ? { reason: value.reason.trim() } : {}),
         ...(hasSource && hasAmount ? { reallocation: { source_envelope_id: value.sourceEnvelopeId, amount_minor: value.reallocationAmountMinor! } } : {}),
@@ -165,7 +155,7 @@ export class PlanDetailPageComponent {
       householdId: household.id,
       planId: plan.id,
       request: {
-        effective_date: effectiveDate(household.timezone),
+        effective_date: todayInTimeZone(household.timezone),
         amount_minor: value.amountMinor,
         mode: value.mode,
         ...(value.reason.trim() ? { reason: value.reason.trim() } : {}),
@@ -183,7 +173,7 @@ export class PlanDetailPageComponent {
       householdId: household.id,
       planId: plan.id,
       request: {
-        effective_date: effectiveDate(household.timezone),
+        effective_date: todayInTimeZone(household.timezone),
         final_amount_minor: value.finalAmountMinor,
         purchase_kind: value.purchaseKind,
         ...(value.purchaseKind === PurchaseKind.CARD ? { card_account_id: value.cardAccountId, payment_envelope_id: value.paymentEnvelopeId } : {}),
@@ -202,7 +192,7 @@ export class PlanDetailPageComponent {
     this.store.dispatch(PlanActions.cancelPlan({
       householdId: household.id,
       planId: plan.id,
-      request: { effective_date: effectiveDate(household.timezone), reason },
+      request: { effective_date: todayInTimeZone(household.timezone), reason },
     }));
   }
 }

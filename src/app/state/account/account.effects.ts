@@ -15,6 +15,7 @@ import {
 
 import { BudgetService } from '../../core/api/generated';
 import { ApiError } from '../../core/errors/api-error';
+import * as BalanceActions from '../balance/balance.actions';
 import * as AccountActions from './account.actions';
 import { selectAccountIncludeArchived } from './account.selectors';
 
@@ -166,6 +167,7 @@ export class AccountEffects {
                   householdId,
                   includeArchived,
                 }),
+                BalanceActions.loadBalances({ householdId }),
               ]),
               catchError((error: unknown) =>
                 of(

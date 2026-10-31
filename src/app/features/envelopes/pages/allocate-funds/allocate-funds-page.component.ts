@@ -5,6 +5,7 @@ import {
   effect,
   inject,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
@@ -14,7 +15,9 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 
+import { MoneyInputDirective } from '../../../../shared/directives/money-input.directive';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { todayInTimeZone } from '../../../../shared/utils/date';
 import * as BalanceActions from '../../../../state/balance/balance.actions';
 import { selectBalances } from '../../../../state/balance/balance.selectors';
 import * as EnvelopeActions from '../../../../state/envelope/envelope.actions';
@@ -24,11 +27,10 @@ import {
   selectEnvelopeError,
 } from '../../../../state/envelope/envelope.selectors';
 import { selectCurrentHousehold } from '../../../../state/household/household.selectors';
-import { localDateString, parseMinorUnits } from '../../envelope-amount';
 
 @Component({
   selector: 'app-allocate-funds-page',
-  imports: [MoneyPipe, ReactiveFormsModule, RouterLink],
+  imports: [MoneyInputDirective, MoneyPipe, ReactiveFormsModule, RouterLink],
   templateUrl: './allocate-funds-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -49,11 +51,22 @@ export class AllocateFundsPageComponent {
   protected readonly readyToAssign = computed(
     () => this.balances()?.ready_to_assign_minor ?? 0,
   );
+  private dateTouched = false;
   protected readonly form = this.formBuilder.nonNullable.group({
     envelopeId: [this.route.snapshot.queryParamMap.get('envelope') ?? '', [Validators.required]],
-    amount: ['', [Validators.required, Validators.pattern(/^\d+(?:[.,]\d+)?$/)]],
-    effectiveDate: [localDateString(), [Validators.required]],
+    amount: this.formBuilder.control<number | null>(null, [Validators.required, Validators.min(1)]),
+    effectiveDate: [todayInTimeZone(this.household()?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone), [Validators.required]],
     reason: [''],
+  });
+
+  private readonly syncEffectiveDate = effect(() => {
+    const household = this.household();
+    if (household && !this.dateTouched) {
+      this.form.controls.effectiveDate.patchValue(
+        todayInTimeZone(household.timezone),
+        { emitEvent: false },
+      );
+    }
   });
 
   private readonly loadReferenceData = effect(() => {
@@ -68,6 +81,14 @@ export class AllocateFundsPageComponent {
     return this.form.controls.amount;
   }
 
+  constructor() {
+    this.form.controls.effectiveDate.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => {
+        this.dateTouched = true;
+      });
+  }
+
   protected onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -76,10 +97,7 @@ export class AllocateFundsPageComponent {
 
     const householdId = this.householdId();
     const { envelopeId, amount, effectiveDate, reason } = this.form.getRawValue();
-    const amountMinor = parseMinorUnits(amount, this.currency());
-    if (!householdId || amountMinor === null) {
-      this.form.controls.amount.setErrors({ ...(this.form.controls.amount.errors ?? {}), precision: true });
-      this.form.controls.amount.markAsTouched();
+    if (!householdId || amount === null) {
       return;
     }
 
@@ -87,7 +105,7 @@ export class AllocateFundsPageComponent {
       EnvelopeActions.allocateFunds({
         householdId,
         envelopeId,
-        amountMinor,
+        amountMinor: amount,
         effectiveDate,
         reason: reason.trim() || undefined,
       }),

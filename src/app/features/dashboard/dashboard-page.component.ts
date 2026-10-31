@@ -32,6 +32,7 @@ import {
   MoneyPipe,
   type MoneySignDisplay,
 } from '../../shared/pipes/money.pipe';
+import { formatEffectiveDate } from '../../shared/utils/date';
 import * as BalanceActions from '../../state/balance/balance.actions';
 import {
   selectBalanceError,
@@ -338,19 +339,7 @@ export class DashboardPageComponent {
   }
 
   protected transactionDate(transaction: Transaction): string {
-    const [year, month, day] = transaction.effective_date
-      .split('-')
-      .map(Number);
-
-    if (!year || !month || !day) {
-      return transaction.effective_date;
-    }
-
-    return new Intl.DateTimeFormat('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }).format(new Date(year, month - 1, day));
+    return formatEffectiveDate(transaction.effective_date);
   }
 
   protected transactionAccount(transaction: Transaction): string | null {

@@ -14,6 +14,7 @@ import {
 import type { Suggestion } from '../../core/api/generated';
 import { MoneyInputDirective } from '../../shared/directives/money-input.directive';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
+import { todayInTimeZone } from '../../shared/utils/date';
 import * as AccountActions from '../../state/account/account.actions';
 import { selectAllAccounts } from '../../state/account/account.selectors';
 import * as EnvelopeActions from '../../state/envelope/envelope.actions';
@@ -29,12 +30,6 @@ import { selectCurrentHousehold } from '../../state/household/household.selector
 
 type ListFilter = 'ALL' | 'OPEN' | 'DONE';
 type SuggestionAction = 'CONFIRM' | 'EDIT' | 'CANCEL' | 'CONVERT';
-
-function localDateString(): string {
-  const date = new Date();
-  const offset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
-}
 
 @Component({
   selector: 'app-suggestion-list-page',
@@ -96,7 +91,7 @@ export class SuggestionListPageComponent {
     accountId: this.formBuilder.nonNullable.control(''),
     envelopeId: this.formBuilder.nonNullable.control(''),
     paymentEnvelopeId: this.formBuilder.nonNullable.control(''),
-    effectiveDate: this.formBuilder.nonNullable.control(localDateString()),
+    effectiveDate: this.formBuilder.nonNullable.control(todayInTimeZone(this.household()?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone)),
     planKind: this.formBuilder.nonNullable.control<PlanKind>(PlanKind.PURCHASE),
     targetEnvelopeId: this.formBuilder.nonNullable.control(''),
     targetAccountId: this.formBuilder.nonNullable.control(''),
@@ -152,7 +147,7 @@ export class SuggestionListPageComponent {
       accountId: '',
       envelopeId: '',
       paymentEnvelopeId: '',
-      effectiveDate: localDateString(),
+      effectiveDate: todayInTimeZone(this.household()?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone),
       planKind: PlanKind.PURCHASE,
       targetEnvelopeId: '',
       targetAccountId: '',
@@ -186,7 +181,7 @@ export class SuggestionListPageComponent {
       accountId: '',
       envelopeId: '',
       paymentEnvelopeId: '',
-      effectiveDate: localDateString(),
+      effectiveDate: todayInTimeZone(this.household()?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone),
       planKind: PlanKind.PURCHASE,
       targetEnvelopeId: '',
       targetAccountId: '',
