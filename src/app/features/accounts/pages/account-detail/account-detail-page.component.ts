@@ -4,6 +4,7 @@ import {
   computed,
   effect,
   inject,
+  signal,
 } from '@angular/core';
 import {
   AbstractControl,
@@ -29,10 +30,12 @@ import {
 } from '../../../../core/api/generated';
 import type { Transaction } from '../../../../core/api/generated';
 import { TransactionsService } from '../../../../core/api/generated';
+import { MoneyInputDirective } from '../../../../shared/directives/money-input.directive';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { formatEffectiveDate, todayInTimeZone } from '../../../../shared/utils/date';
 import * as AccountActions from '../../../../state/account/account.actions';
 import {
-  selectAccountById,
+  selectAllAccounts,
   selectAccountError,
   selectAccountLoading,
   selectOpeningBalanceSaving,
@@ -65,12 +68,12 @@ function nonZeroAmount(control: AbstractControl): ValidationErrors | null {
     return null;
   }
 
-  return Number(value) === 0 ? { zero: true } : null;
+  return value === 0 ? { zero: true } : null;
 }
 
 @Component({
   selector: 'app-account-detail-page',
-  imports: [MoneyPipe, ReactiveFormsModule, RouterLink],
+  imports: [MoneyInputDirective, MoneyPipe, ReactiveFormsModule, RouterLink],
   templateUrl: './account-detail-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -79,12 +82,17 @@ export class AccountDetailPageComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly transactionsService = inject(TransactionsService);
   private readonly actions$ = inject(Actions);
-  private readonly accountId =
-    inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
+  private readonly route = inject(ActivatedRoute);
+  private readonly routeParamId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('id') ?? '')),
+    { initialValue: '' },
+  );
+  private readonly accountId = computed(() => this.routeParamId());
 
   protected readonly household = this.store.selectSignal(selectCurrentHousehold);
-  protected readonly account = this.store.selectSignal(
-    selectAccountById(this.accountId),
+  private readonly allAccounts = this.store.selectSignal(selectAllAccounts);
+  protected readonly account = computed(
+    () => this.allAccounts().find((account) => account.id === this.accountId()) ?? null,
   );
   protected readonly loading = this.store.selectSignal(selectAccountLoading);
   protected readonly saving = this.store.selectSignal(
@@ -102,11 +110,23 @@ export class AccountDetailPageComponent {
   protected readonly currency = computed(
     () => this.household()?.currency ?? 'EUR',
   );
+  private dateTouched = false;
+  private readonly refreshTick = signal(0);
 
   protected readonly form = this.formBuilder.group({
-    amount: [null as number | null, [Validators.required, nonZeroAmount]],
-    effectiveDate: [this.today(), [Validators.required]],
+    amount: this.formBuilder.control<number | null>(null, [Validators.required, nonZeroAmount]),
+    effectiveDate: [todayInTimeZone(this.household()?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone), [Validators.required]],
     reason: [''],
+  });
+
+  private readonly syncEffectiveDate = effect(() => {
+    const household = this.household();
+    if (household && !this.dateTouched) {
+      this.form.controls.effectiveDate.patchValue(
+        todayInTimeZone(household.timezone),
+        { emitEvent: false },
+      );
+    }
   });
 
   private readonly syncAccounts = effect(() => {
@@ -132,6 +152,7 @@ export class AccountDetailPageComponent {
       householdId,
       accountId: account.id,
       updatedAt: account.updated_at,
+      refreshTick: this.refreshTick(),
     };
   });
 
@@ -171,12 +192,19 @@ export class AccountDetailPageComponent {
   );
 
   constructor() {
+    this.form.controls.effectiveDate.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => {
+        this.dateTouched = true;
+      });
+
     this.actions$
       .pipe(
         ofType(AccountActions.recordOpeningBalanceSuccess),
         takeUntilDestroyed(),
       )
       .subscribe(() => {
+        this.refreshTick.update((tick) => tick + 1);
         this.form.patchValue({ amount: null, reason: '' });
       });
   }
@@ -211,7 +239,7 @@ export class AccountDetailPageComponent {
         householdId,
         accountId: account.id,
         effectiveDate,
-        deltaMinor: this.toMinorUnits(amount, this.currency()),
+        deltaMinor: amount,
         reason: (reason ?? '').trim() || undefined,
       }),
     );
@@ -266,7 +294,7 @@ export class AccountDetailPageComponent {
     const posting = transaction.postings.find(
       (entry) =>
         entry.kind === PostingKind.ACCOUNT &&
-        entry.account_id === this.accountId,
+        entry.account_id === this.accountId(),
     );
 
     return posting?.delta_minor ?? 0;
@@ -298,43 +326,7 @@ export class AccountDetailPageComponent {
   }
 
   protected transactionDate(transaction: Transaction): string {
-    const [year, month, day] = transaction.effective_date
-      .split('-')
-      .map(Number);
-
-    if (!year || !month || !day) {
-      return transaction.effective_date;
-    }
-
-    return new Intl.DateTimeFormat('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }).format(new Date(year, month - 1, day));
-  }
-
-  private toMinorUnits(value: number, currency: string): number {
-    return Math.round(value * 10 ** this.fractionDigits(currency));
-  }
-
-  private fractionDigits(currency: string): number {
-    try {
-      return (
-        new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency,
-        }).resolvedOptions().maximumFractionDigits ?? 2
-      );
-    } catch {
-      return 2;
-    }
-  }
-
-  private today(): string {
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${now.getFullYear()}-${month}-${day}`;
+    return formatEffectiveDate(transaction.effective_date);
   }
 
   private humanize(value: string): string {

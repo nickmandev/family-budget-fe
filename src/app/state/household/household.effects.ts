@@ -15,22 +15,10 @@ import {
 } from 'rxjs';
 
 import { HouseholdsService } from '../../core/api/generated';
-import { ApiError } from '../../core/errors/api-error';
+import { toApiErrorMessage } from '../../core/errors/api-error-message';
 import * as HouseholdActions from './household.actions';
 import { selectSelectedId } from './household.selectors';
 import { storeSelectedHouseholdId } from './household.storage';
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'Something went wrong. Please try again.';
-}
 
 @Injectable()
 export class HouseholdEffects {
@@ -52,7 +40,7 @@ export class HouseholdEffects {
           catchError((error: unknown) =>
             of(
               HouseholdActions.loadHouseholdsFailure({
-                error: toErrorMessage(error),
+                error: toApiErrorMessage(error),
               }),
             ),
           ),
@@ -80,7 +68,7 @@ export class HouseholdEffects {
             catchError((error: unknown) =>
               of(
                 HouseholdActions.createHouseholdFailure({
-                  error: toErrorMessage(error),
+                  error: toApiErrorMessage(error),
                 }),
               ),
             ),
@@ -109,7 +97,7 @@ export class HouseholdEffects {
           catchError((error: unknown) =>
             of(
               HouseholdActions.loadMembersFailure({
-                error: toErrorMessage(error),
+                error: toApiErrorMessage(error),
               }),
             ),
           ),
@@ -148,7 +136,7 @@ export class HouseholdEffects {
             catchError((error: unknown) =>
               of(
                 HouseholdActions.addMemberFailure({
-                  error: toErrorMessage(error),
+                  error: toApiErrorMessage(error),
                 }),
               ),
             ),
@@ -171,7 +159,7 @@ export class HouseholdEffects {
             catchError((error: unknown) =>
               of(
                 HouseholdActions.removeMemberFailure({
-                  error: toErrorMessage(error),
+                  error: toApiErrorMessage(error),
                 }),
               ),
             ),

@@ -7,6 +7,7 @@ import {
   Renderer2,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { minorUnitDigits } from '../utils/money';
 
 export function parseMoneyInput(value: string, currency = 'EUR'): number | null {
   const input = value.trim().replace(',', '.');
@@ -100,13 +101,6 @@ export class MoneyInputDirective implements ControlValueAccessor {
   }
 
   private fractionDigits(): number {
-    try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: this.moneyInput,
-      }).resolvedOptions().maximumFractionDigits ?? 2;
-    } catch {
-      return 2;
-    }
+    return minorUnitDigits(this.moneyInput);
   }
 }

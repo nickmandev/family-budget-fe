@@ -4,7 +4,9 @@ import {
   computed,
   effect,
   inject,
+  signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
@@ -13,11 +15,12 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { map } from 'rxjs';
 
 import { LifecycleStatus } from '../../../../core/api/generated';
 import * as EnvelopeActions from '../../../../state/envelope/envelope.actions';
 import {
-  selectEnvelopeById,
+  selectAllEnvelopes,
   selectEnvelopeError,
   selectEnvelopeLoading,
   selectEnvelopeSaving,
@@ -36,11 +39,19 @@ import {
 export class EnvelopeEditPageComponent {
   private readonly store = inject(Store);
   private readonly formBuilder = inject(FormBuilder);
-  private readonly envelopeId = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
-  private patched = false;
+  private readonly route = inject(ActivatedRoute);
+  private readonly routeParamId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('id') ?? '')),
+    { initialValue: '' },
+  );
+  private readonly envelopeId = computed(() => this.routeParamId());
+  private readonly patchedId = signal<string | null>(null);
 
   protected readonly household = this.store.selectSignal(selectCurrentHousehold);
-  protected readonly envelope = this.store.selectSignal(selectEnvelopeById(this.envelopeId));
+  private readonly allEnvelopes = this.store.selectSignal(selectAllEnvelopes);
+  protected readonly envelope = computed(
+    () => this.allEnvelopes().find((envelope) => envelope.id === this.envelopeId()) ?? null,
+  );
   protected readonly loading = this.store.selectSignal(selectEnvelopeLoading);
   protected readonly saving = this.store.selectSignal(selectEnvelopeSaving);
   protected readonly error = this.store.selectSignal(selectEnvelopeError);
@@ -62,15 +73,15 @@ export class EnvelopeEditPageComponent {
 
   private readonly patchForm = effect(() => {
     const envelope = this.envelope();
-    if (!envelope || this.patched) {
+    if (!envelope || envelope.id === this.patchedId()) {
       return;
     }
 
-    this.patched = true;
     this.form.patchValue({
       name: envelope.name,
       archived: envelope.status === LifecycleStatus.ARCHIVED,
     });
+    this.patchedId.set(envelope.id);
   });
 
   protected get name(): AbstractControl {

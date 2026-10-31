@@ -1,5 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 
+import * as AuthActions from '../auth/auth.actions';
 import * as HouseholdActions from './household.actions';
 import {
   householdAdapter,
@@ -9,6 +10,11 @@ import {
 
 export const householdReducer = createReducer(
   initialHouseholdState,
+
+  on(AuthActions.logoutSuccess, () => ({
+    ...initialHouseholdState,
+    selectedId: null,
+  })),
 
   on(HouseholdActions.loadHouseholds, (state) => ({
     ...state,

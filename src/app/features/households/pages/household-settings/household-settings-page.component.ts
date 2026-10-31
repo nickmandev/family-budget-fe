@@ -2,9 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
-  OnInit,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
@@ -13,6 +14,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { map } from 'rxjs';
 
 import { MembershipRole } from '../../../../core/api/generated';
 import * as HouseholdActions from '../../../../state/household/household.actions';
@@ -32,12 +34,16 @@ import { selectUser } from '../../../../state/auth/auth.selectors';
   templateUrl: './household-settings-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HouseholdSettingsPageComponent implements OnInit {
+export class HouseholdSettingsPageComponent {
   private readonly store = inject(Store);
   private readonly formBuilder = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
 
-  protected readonly householdId = this.route.snapshot.paramMap.get('id') ?? '';
+  private readonly routeParamId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('id') ?? '')),
+    { initialValue: '' },
+  );
+  protected readonly householdId = computed(() => this.routeParamId());
   protected readonly roleOptions = [MembershipRole.MEMBER, MembershipRole.OWNER];
   protected readonly households = this.store.selectSignal(selectAllHouseholds);
   protected readonly householdLoading = this.store.selectSignal(
@@ -52,7 +58,7 @@ export class HouseholdSettingsPageComponent implements OnInit {
   private readonly currentUser = this.store.selectSignal(selectUser);
 
   protected readonly household = computed(
-    () => this.households().find((household) => household.id === this.householdId) ?? null,
+    () => this.households().find((household) => household.id === this.householdId()) ?? null,
   );
   protected readonly isOwner = computed(() => {
     const userId = this.currentUser()?.id;
@@ -73,14 +79,18 @@ export class HouseholdSettingsPageComponent implements OnInit {
     ),
   });
 
-  ngOnInit(): void {
+  private readonly loadHouseholdsIfEmpty = effect(() => {
     if (this.households().length === 0 && !this.householdLoading()) {
       this.store.dispatch(HouseholdActions.loadHouseholds());
     }
-    this.store.dispatch(
-      HouseholdActions.loadMembers({ householdId: this.householdId }),
-    );
-  }
+  });
+
+  private readonly loadMembers = effect(() => {
+    const householdId = this.householdId();
+    if (householdId) {
+      this.store.dispatch(HouseholdActions.loadMembers({ householdId }));
+    }
+  });
 
   protected onSubmit(): void {
     if (this.form.invalid) {
@@ -89,9 +99,13 @@ export class HouseholdSettingsPageComponent implements OnInit {
     }
 
     const { email, role } = this.form.getRawValue();
+    const householdId = this.householdId();
+    if (!householdId) {
+      return;
+    }
     this.store.dispatch(
       HouseholdActions.addMember({
-        householdId: this.householdId,
+        householdId,
         email: email.trim(),
         role,
       }),
@@ -100,9 +114,13 @@ export class HouseholdSettingsPageComponent implements OnInit {
   }
 
   protected removeMember(userId: string): void {
+    const householdId = this.householdId();
+    if (!householdId) {
+      return;
+    }
     this.store.dispatch(
       HouseholdActions.removeMember({
-        householdId: this.householdId,
+        householdId,
         userId,
       }),
     );

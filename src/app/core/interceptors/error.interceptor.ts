@@ -1,28 +1,41 @@
 import { HttpErrorResponse, type HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { catchError, throwError } from 'rxjs';
 
-import { AUTH_TOKEN_STORAGE_KEY } from '../auth/auth.constants';
+import { clearSession } from '../auth/auth.storage';
 import { ApiError } from '../errors/api-error';
+import * as AuthActions from '../../state/auth/auth.actions';
 
 /**
  * Normalises backend errors into `ApiError` and clears stale credentials on
  * `401`.
- *
- * Full auth state cleanup/redirect and toast notifications are added by the
- * auth task; this interceptor deliberately stays focused on transport-level
- * error handling.
  */
-export const errorInterceptor: HttpInterceptorFn = (req, next) =>
-  next(req).pipe(
+export const errorInterceptor: HttpInterceptorFn = (req, next) => {
+  const store = inject(Store);
+  const router = inject(Router);
+
+  return next(req).pipe(
     catchError((error: unknown) => {
       if (!(error instanceof HttpErrorResponse)) {
         return throwError(() => error);
       }
 
       if (error.status === 401) {
-        localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+        clearSession();
+
+        const pathname = new URL(req.url, 'http://localhost').pathname;
+        const isAuthEndpoint = ['/auth/login', '/auth/register', '/auth/logout']
+          .some((endpoint) => pathname.endsWith(endpoint));
+
+        if (!isAuthEndpoint) {
+          store.dispatch(AuthActions.logoutSuccess());
+          void router.navigate(['/login']);
+        }
       }
 
       return throwError(() => new ApiError(error));
     }),
   );
+};

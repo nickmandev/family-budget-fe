@@ -60,15 +60,27 @@
       >
         Currency
       </label>
-      <select
+      <input
         id="household-currency"
+        type="text"
         formControlName="currency"
-        class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
-      >
-        @for (currency of currencies; track currency) {
-          <option [value]="currency">{{ currency }}</option>
-        }
-      </select>
+        maxlength="3"
+        autocomplete="off"
+        placeholder="EUR"
+        class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+      />
+      <p class="mt-1.5 text-sm text-slate-500">
+        Three-letter ISO 4217 code, e.g. EUR, USD, GBP.
+      </p>
+      @if (showError(form.controls.currency)) {
+        <p id="household-currency-error" class="mt-1.5 text-sm text-rose-600">
+          @if (form.controls.currency.hasError('required')) {
+            Currency is required.
+          } @else {
+            Currency must be a three-letter uppercase code.
+          }
+        </p>
+      }
     </div>
 
     <div>

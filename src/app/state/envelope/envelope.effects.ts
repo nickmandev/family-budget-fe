@@ -14,22 +14,11 @@ import {
 } from 'rxjs';
 
 import { BudgetService } from '../../core/api/generated';
-import { ApiError } from '../../core/errors/api-error';
+import { newIdempotencyKey } from '../../core/api/idempotency';
+import { toApiErrorMessage } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
 import * as EnvelopeActions from './envelope.actions';
 import { selectEnvelopeIncludeArchived } from './envelope.selectors';
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'Something went wrong. Please try again.';
-}
 
 @Injectable()
 export class EnvelopeEffects {
@@ -51,7 +40,7 @@ export class EnvelopeEffects {
             catchError((error: unknown) =>
               of(
                 EnvelopeActions.loadEnvelopesFailure({
-                  error: toErrorMessage(error),
+                  error: toApiErrorMessage(error),
                 }),
               ),
             ),
@@ -82,7 +71,7 @@ export class EnvelopeEffects {
             catchError((error: unknown) =>
               of(
                 EnvelopeActions.createEnvelopeFailure({
-                  error: toErrorMessage(error),
+                  error: toApiErrorMessage(error),
                 }),
               ),
             ),
@@ -115,7 +104,7 @@ export class EnvelopeEffects {
               catchError((error: unknown) =>
                 of(
                   EnvelopeActions.updateEnvelopeFailure({
-                    error: toErrorMessage(error),
+                    error: toApiErrorMessage(error),
                   }),
                 ),
               ),
@@ -136,7 +125,7 @@ export class EnvelopeEffects {
           this.budgetService
             .allocateFunds({
               id: householdId,
-              idempotencyKey: crypto.randomUUID(),
+              idempotencyKey: newIdempotencyKey(),
               allocationRequest: {
                 effective_date: effectiveDate,
                 envelope_id: envelopeId,
@@ -153,7 +142,7 @@ export class EnvelopeEffects {
               catchError((error: unknown) =>
                 of(
                   EnvelopeActions.allocateFundsFailure({
-                    error: toErrorMessage(error),
+                    error: toApiErrorMessage(error),
                   }),
                 ),
               ),
@@ -181,7 +170,7 @@ export class EnvelopeEffects {
           this.budgetService
             .reallocateFunds({
               id: householdId,
-              idempotencyKey: crypto.randomUUID(),
+              idempotencyKey: newIdempotencyKey(),
               reallocationRequest: {
                 effective_date: effectiveDate,
                 source_envelope_id: sourceEnvelopeId,
@@ -199,7 +188,7 @@ export class EnvelopeEffects {
               catchError((error: unknown) =>
                 of(
                   EnvelopeActions.reallocateFundsFailure({
-                    error: toErrorMessage(error),
+                    error: toApiErrorMessage(error),
                   }),
                 ),
               ),

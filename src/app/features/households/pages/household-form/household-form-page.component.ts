@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
@@ -40,7 +41,6 @@ export class HouseholdFormPageComponent {
   private readonly store = inject(Store);
   private readonly formBuilder = inject(FormBuilder);
 
-  protected readonly currencies = ['EUR', 'USD', 'GBP', 'BGN'];
   protected readonly timezones = getSupportedTimezones();
   protected readonly creating = this.store.selectSignal(selectHouseholdCreating);
   protected readonly error = this.store.selectSignal(selectHouseholdError);
@@ -53,6 +53,19 @@ export class HouseholdFormPageComponent {
       [Validators.required],
     ],
   });
+
+  constructor() {
+    this.form.controls.currency.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((currency) => {
+        const uppercaseCurrency = currency.toUpperCase();
+        if (currency !== uppercaseCurrency) {
+          this.form.controls.currency.setValue(uppercaseCurrency, {
+            emitEvent: false,
+          });
+        }
+      });
+  }
 
   protected onSubmit(): void {
     if (this.form.invalid) {

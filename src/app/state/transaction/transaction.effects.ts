@@ -14,31 +14,21 @@ import {
 } from 'rxjs';
 
 import { TransactionsService } from '../../core/api/generated';
-import { ApiError } from '../../core/errors/api-error';
+import { newIdempotencyKey } from '../../core/api/idempotency';
+import { toApiErrorMessage } from '../../core/errors/api-error-message';
+import type { FriendlyErrorMap } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
 import * as TransactionActions from './transaction.actions';
 import { selectTransactionFilters, selectTransactionNextCursor } from './transaction.selectors';
 
-function toErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    if (error.code === 'ACCOUNT_SCOPE_CHANGE_REQUIRES_FUNDING_PLAN') {
-      return `${error.message} Provide an explicit funding plan using Ready to Assign or envelope amounts.`;
-    }
-    if (error.code === 'REFUND_EXCEEDS_REMAINDER') {
-      return 'This refund is larger than the refundable amount remaining on the original transaction.';
-    }
-    if (error.code === 'REVERSAL_EXCEEDS_REMAINDER') {
-      return 'This reversal is larger than the reversible amount remaining on the original transaction.';
-    }
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'Something went wrong. Please try again.';
-}
+const TRANSACTION_FRIENDLY_ERRORS: FriendlyErrorMap = {
+  ACCOUNT_SCOPE_CHANGE_REQUIRES_FUNDING_PLAN:
+    'Provide an explicit funding plan using Ready to Assign or envelope amounts.',
+  REFUND_EXCEEDS_REMAINDER:
+    'This refund is larger than the refundable amount remaining on the original transaction.',
+  REVERSAL_EXCEEDS_REMAINDER:
+    'This reversal is larger than the reversible amount remaining on the original transaction.',
+};
 
 @Injectable()
 export class TransactionEffects {
@@ -62,7 +52,7 @@ export class TransactionEffects {
               }),
             ),
             catchError((error: unknown) =>
-              of(TransactionActions.loadTransactionsFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.loadTransactionsFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -90,7 +80,7 @@ export class TransactionEffects {
               }),
             ),
             catchError((error: unknown) =>
-              of(TransactionActions.loadMoreTransactionsFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.loadMoreTransactionsFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           );
       }),
@@ -102,7 +92,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordIncome),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordIncome({ id: householdId, idempotencyKey: crypto.randomUUID(), incomeRequest: request })
+          .recordIncome({ id: householdId, idempotencyKey: newIdempotencyKey(), incomeRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordIncomeSuccess({ transaction }),
@@ -110,7 +100,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordIncomeFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordIncomeFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -122,7 +112,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordPurchase),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordPurchase({ id: householdId, idempotencyKey: crypto.randomUUID(), purchaseRequest: request })
+          .recordPurchase({ id: householdId, idempotencyKey: newIdempotencyKey(), purchaseRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordPurchaseSuccess({ transaction }),
@@ -130,7 +120,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordPurchaseFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordPurchaseFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -142,7 +132,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordTransfer),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordTransfer({ id: householdId, idempotencyKey: crypto.randomUUID(), transferRequest: request })
+          .recordTransfer({ id: householdId, idempotencyKey: newIdempotencyKey(), transferRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordTransferSuccess({ transaction }),
@@ -150,7 +140,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordTransferFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordTransferFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -162,7 +152,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordCardPayment),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordCardPayment({ id: householdId, idempotencyKey: crypto.randomUUID(), cardPaymentRequest: request })
+          .recordCardPayment({ id: householdId, idempotencyKey: newIdempotencyKey(), cardPaymentRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordCardPaymentSuccess({ transaction }),
@@ -170,7 +160,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordCardPaymentFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordCardPaymentFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -182,7 +172,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordCardFee),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordCardFee({ id: householdId, idempotencyKey: crypto.randomUUID(), cardFeeRequest: request })
+          .recordCardFee({ id: householdId, idempotencyKey: newIdempotencyKey(), cardFeeRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordCardFeeSuccess({ transaction }),
@@ -190,7 +180,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordCardFeeFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordCardFeeFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -202,7 +192,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordRefund),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordRefund({ id: householdId, idempotencyKey: crypto.randomUUID(), refundRequest: request })
+          .recordRefund({ id: householdId, idempotencyKey: newIdempotencyKey(), refundRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordRefundSuccess({ transaction }),
@@ -210,7 +200,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordRefundFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordRefundFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -222,7 +212,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordReversal),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordReversal({ id: householdId, idempotencyKey: crypto.randomUUID(), reversalRequest: request })
+          .recordReversal({ id: householdId, idempotencyKey: newIdempotencyKey(), reversalRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordReversalSuccess({ transaction }),
@@ -230,7 +220,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordReversalFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordReversalFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -242,7 +232,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordCorrection),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .correctOperation({ id: householdId, idempotencyKey: crypto.randomUUID(), correctionRequest: request })
+          .correctOperation({ id: householdId, idempotencyKey: newIdempotencyKey(), correctionRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordCorrectionSuccess({ transaction }),
@@ -250,7 +240,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordCorrectionFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordCorrectionFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -262,7 +252,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordReconciliation),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .reconcileAccount({ id: householdId, idempotencyKey: crypto.randomUUID(), reconciliationRequest: request })
+          .reconcileAccount({ id: householdId, idempotencyKey: newIdempotencyKey(), reconciliationRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordReconciliationSuccess({ transaction }),
@@ -270,7 +260,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordReconciliationFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordReconciliationFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),

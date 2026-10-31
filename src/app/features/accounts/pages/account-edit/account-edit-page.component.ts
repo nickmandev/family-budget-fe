@@ -4,7 +4,9 @@ import {
   computed,
   effect,
   inject,
+  signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormBuilder,
@@ -13,6 +15,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { map } from 'rxjs';
 
 import {
   AccountKind,
@@ -20,7 +23,7 @@ import {
 } from '../../../../core/api/generated';
 import * as AccountActions from '../../../../state/account/account.actions';
 import {
-  selectAccountById,
+  selectAllAccounts,
   selectAccountError,
   selectAccountLoading,
   selectAccountSaving,
@@ -43,12 +46,17 @@ import {
 export class AccountEditPageComponent {
   private readonly store = inject(Store);
   private readonly formBuilder = inject(FormBuilder);
-  private readonly accountId =
-    inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
+  private readonly route = inject(ActivatedRoute);
+  private readonly routeParamId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('id') ?? '')),
+    { initialValue: '' },
+  );
+  private readonly accountId = computed(() => this.routeParamId());
 
   protected readonly household = this.store.selectSignal(selectCurrentHousehold);
-  protected readonly account = this.store.selectSignal(
-    selectAccountById(this.accountId),
+  private readonly allAccounts = this.store.selectSignal(selectAllAccounts);
+  protected readonly account = computed(
+    () => this.allAccounts().find((account) => account.id === this.accountId()) ?? null,
   );
   protected readonly loading = this.store.selectSignal(selectAccountLoading);
   protected readonly saving = this.store.selectSignal(selectAccountSaving);
@@ -67,7 +75,7 @@ export class AccountEditPageComponent {
     budgetEligible: [true],
   });
 
-  private patched = false;
+  private readonly patchedId = signal<string | null>(null);
 
   private readonly syncAccounts = effect(() => {
     const householdId = this.householdId();
@@ -83,11 +91,10 @@ export class AccountEditPageComponent {
 
   private readonly patchForm = effect(() => {
     const account = this.account();
-    if (!account || this.patched) {
+    if (!account || account.id === this.patchedId()) {
       return;
     }
 
-    this.patched = true;
     this.form.patchValue({
       name: account.name,
       archived: account.status === LifecycleStatus.ARCHIVED,
@@ -98,7 +105,10 @@ export class AccountEditPageComponent {
     if (account.kind === AccountKind.CREDIT_CARD_LIABILITY) {
       eligibility.setValue(false);
       eligibility.disable();
+    } else {
+      eligibility.enable();
     }
+    this.patchedId.set(account.id);
   });
 
   protected get name(): AbstractControl {

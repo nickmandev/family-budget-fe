@@ -5,14 +5,11 @@ import {
   effect,
   inject,
 } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 
 import {
   AccountKind,
-  OperationType,
   PlanState,
   SuggestionState,
 } from '../../core/api/generated';
@@ -20,18 +17,20 @@ import type {
   AccountBalance,
   Deficit,
   EnvelopeBalance,
-  Plan,
   Transaction,
 } from '../../core/api/generated';
 import {
-  PlansService,
-  SuggestionsService,
-  TransactionsService,
-} from '../../core/api/generated';
-import {
   MoneyPipe,
-  type MoneySignDisplay,
 } from '../../shared/pipes/money.pipe';
+import { formatEffectiveDate } from '../../shared/utils/date';
+import {
+  transactionAmountClasses as getTransactionAmountClasses,
+  transactionBadgeClasses as getTransactionBadgeClasses,
+  transactionDirection as getTransactionDirection,
+  transactionSignDisplay as getTransactionSignDisplay,
+  transactionTypeLabel as getTransactionTypeLabel,
+  signedAmountMinor,
+} from '../transactions/transaction-display';
 import * as BalanceActions from '../../state/balance/balance.actions';
 import {
   selectBalanceError,
@@ -43,78 +42,21 @@ import {
   selectCurrentHousehold,
   selectHouseholdLoading,
 } from '../../state/household/household.selectors';
-
-type TransactionDirection = 'income' | 'expense' | 'neutral';
-
-interface DashboardExtras {
-  transactions: Transaction[];
-  plans: Plan[];
-  pendingSuggestions: number;
-}
+import * as PlanActions from '../../state/plan/plan.actions';
+import { selectAllPlans } from '../../state/plan/plan.selectors';
+import * as SuggestionActions from '../../state/suggestion/suggestion.actions';
+import { selectAllSuggestions } from '../../state/suggestion/suggestion.selectors';
+import * as TransactionActions from '../../state/transaction/transaction.actions';
+import { selectAllTransactions } from '../../state/transaction/transaction.selectors';
 
 interface DeficitItem extends Deficit {
   label: string;
 }
 
-const EMPTY_EXTRAS: DashboardExtras = {
-  transactions: [],
-  plans: [],
-  pendingSuggestions: 0,
-};
-
-const INCOME_OPERATIONS: ReadonlySet<OperationType> = new Set([
-  OperationType.INCOME,
-  OperationType.REIMBURSEMENT,
-  OperationType.CASH_REFUND,
-  OperationType.CARD_REFUND,
-  OperationType.OPENING_BALANCE,
-  OperationType.RECONCILE_INCREASE,
-]);
-
-const EXPENSE_OPERATIONS: ReadonlySet<OperationType> = new Set([
-  OperationType.DEBIT_PURCHASE,
-  OperationType.CASH_PURCHASE,
-  OperationType.CARD_PURCHASE,
-  OperationType.CARD_FEE_INTEREST,
-  OperationType.PURCHASE_COMPLETE,
-  OperationType.RECONCILE_DECREASE,
-]);
-
 const ACTIVE_PLAN_STATES: ReadonlySet<PlanState> = new Set([
   PlanState.RESERVED,
   PlanState.RESERVED_EXCEPTION,
 ]);
-
-const TRANSACTION_TYPE_LABELS: Partial<Record<OperationType, string>> = {
-  [OperationType.OPENING_BALANCE]: 'Opening',
-  [OperationType.INCOME]: 'Income',
-  [OperationType.REIMBURSEMENT]: 'Income',
-  [OperationType.ALLOCATE]: 'Allocation',
-  [OperationType.REALLOCATE]: 'Allocation',
-  [OperationType.DEBIT_PURCHASE]: 'Purchase',
-  [OperationType.CASH_PURCHASE]: 'Purchase',
-  [OperationType.CARD_PURCHASE]: 'Purchase',
-  [OperationType.CARD_PAYMENT]: 'Card payment',
-  [OperationType.CARD_FEE_INTEREST]: 'Card fee',
-  [OperationType.TRANSFER_ELIGIBLE]: 'Transfer',
-  [OperationType.TRANSFER_TO_ELIGIBLE]: 'Transfer',
-  [OperationType.TRANSFER_OUT_OF_SCOPE]: 'Transfer',
-  [OperationType.TRANSFER_EXCLUDED]: 'Transfer',
-  [OperationType.CASH_REFUND]: 'Refund',
-  [OperationType.CARD_REFUND]: 'Refund',
-  [OperationType.RESERVATION_CREATE]: 'Plan',
-  [OperationType.RESERVATION_RESIZE]: 'Plan',
-  [OperationType.RESERVATION_CANCEL]: 'Plan',
-  [OperationType.PURCHASE_COMPLETE]: 'Purchase',
-  [OperationType.EXTERNAL_TRANSACTION]: 'External',
-  [OperationType.REVERSAL]: 'Reversal',
-  [OperationType.REPLACEMENT]: 'Replacement',
-  [OperationType.CATEGORY_CORRECTION]: 'Correction',
-  [OperationType.ACCOUNT_CORRECTION]: 'Correction',
-  [OperationType.METADATA_CORRECTION]: 'Correction',
-  [OperationType.RECONCILE_INCREASE]: 'Reconciliation',
-  [OperationType.RECONCILE_DECREASE]: 'Reconciliation',
-};
 
 const ACCOUNT_KIND_LABELS: Record<AccountKind, string> = {
   [AccountKind.CHECKING]: 'Checking',
@@ -149,14 +91,21 @@ const ACCOUNT_ICON_CLASSES: Record<AccountKind, string> = {
 })
 export class DashboardPageComponent {
   private readonly store = inject(Store);
-  private readonly transactionsService = inject(TransactionsService);
-  private readonly plansService = inject(PlansService);
-  private readonly suggestionsService = inject(SuggestionsService);
 
   private readonly household = this.store.selectSignal(selectCurrentHousehold);
   private readonly householdId = computed(() => this.household()?.id ?? null);
+  private readonly allTransactions = this.store.selectSignal(selectAllTransactions);
+  private readonly allPlans = this.store.selectSignal(selectAllPlans);
+  private readonly allSuggestions = this.store.selectSignal(selectAllSuggestions);
 
   protected readonly currentHousehold = this.household;
+  protected readonly transactionTypeLabel = getTransactionTypeLabel;
+  protected readonly formatEffectiveDate = formatEffectiveDate;
+  protected readonly transactionDirection = getTransactionDirection;
+  protected readonly transactionAmount = signedAmountMinor;
+  protected readonly transactionSignDisplay = getTransactionSignDisplay;
+  protected readonly transactionAmountClasses = getTransactionAmountClasses;
+  protected readonly transactionBadgeClasses = getTransactionBadgeClasses;
   protected readonly balances = this.store.selectSignal(selectBalances);
   protected readonly resolution = this.store.selectSignal(selectResolution);
   protected readonly loading = this.store.selectSignal(selectBalanceLoading);
@@ -210,49 +159,12 @@ export class DashboardPageComponent {
     }));
   });
 
-  private readonly extras$ = toObservable(this.householdId).pipe(
-    switchMap((householdId) => {
-      if (!householdId) {
-        return of(EMPTY_EXTRAS);
-      }
-
-      return forkJoin({
-        transactions: this.transactionsService
-          .listTransactions({ id: householdId, limit: 10 })
-          .pipe(
-            map((response) => response.items),
-            catchError(() => of([] as Transaction[])),
-          ),
-        plans: this.plansService.listPlans({ id: householdId }).pipe(
-          map((response) => response.items),
-          catchError(() => of([] as Plan[])),
-        ),
-        pendingSuggestions: this.suggestionsService
-          .listSuggestions({ id: householdId })
-          .pipe(
-            map(
-              (response) =>
-                response.items.filter(
-                  (suggestion) =>
-                    suggestion.state === SuggestionState.SUGGESTED ||
-                    suggestion.state === SuggestionState.EDITED,
-                ).length,
-            ),
-            catchError(() => of(0)),
-          ),
-      });
-    }),
-  );
-
-  private readonly extras = toSignal(this.extras$, {
-    initialValue: EMPTY_EXTRAS,
-  });
-
+  // Recent activity reflects the default 50-item transaction slice, limited to 10 here.
   protected readonly recentTransactions = computed(() =>
-    this.extras().transactions.slice(0, 10),
+    this.allTransactions().slice(0, 10),
   );
   protected readonly activePlans = computed(() =>
-    this.extras().plans.filter((plan) => ACTIVE_PLAN_STATES.has(plan.state)),
+    this.allPlans().filter((plan) => ACTIVE_PLAN_STATES.has(plan.state)),
   );
   protected readonly activePlansCount = computed(
     () => this.activePlans().length,
@@ -263,8 +175,12 @@ export class DashboardPageComponent {
       0,
     ),
   );
-  protected readonly pendingSuggestions = computed(
-    () => this.extras().pendingSuggestions,
+  protected readonly pendingSuggestions = computed(() =>
+    this.allSuggestions().filter(
+      (suggestion) =>
+        suggestion.state === SuggestionState.SUGGESTED ||
+        suggestion.state === SuggestionState.EDITED,
+    ).length,
   );
 
   // Reload whenever the selected household changes (including the first
@@ -277,6 +193,9 @@ export class DashboardPageComponent {
 
     this.store.dispatch(BalanceActions.loadBalances({ householdId }));
     this.store.dispatch(BalanceActions.loadResolution({ householdId }));
+    this.store.dispatch(TransactionActions.loadTransactions({ householdId }));
+    this.store.dispatch(PlanActions.loadPlans({ householdId }));
+    this.store.dispatch(SuggestionActions.loadSuggestions({ householdId }));
   });
 
   protected retry(): void {
@@ -330,29 +249,6 @@ export class DashboardPageComponent {
     return this.humanize(transaction.type);
   }
 
-  protected transactionTypeLabel(transaction: Transaction): string {
-    return (
-      TRANSACTION_TYPE_LABELS[transaction.type] ??
-      this.humanize(transaction.type)
-    );
-  }
-
-  protected transactionDate(transaction: Transaction): string {
-    const [year, month, day] = transaction.effective_date
-      .split('-')
-      .map(Number);
-
-    if (!year || !month || !day) {
-      return transaction.effective_date;
-    }
-
-    return new Intl.DateTimeFormat('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }).format(new Date(year, month - 1, day));
-  }
-
   protected transactionAccount(transaction: Transaction): string | null {
     const accountNameById = new Map(
       this.accounts().map((account) => [account.account_id, account.name]),
@@ -364,75 +260,6 @@ export class DashboardPageComponent {
     return posting?.account_id
       ? (accountNameById.get(posting.account_id) ?? null)
       : null;
-  }
-
-  protected transactionDirection(
-    transaction: Transaction,
-  ): TransactionDirection {
-    if (INCOME_OPERATIONS.has(transaction.type)) {
-      return 'income';
-    }
-
-    if (EXPENSE_OPERATIONS.has(transaction.type)) {
-      return 'expense';
-    }
-
-    if (transaction.amount_minor !== null && transaction.amount_minor !== 0) {
-      return transaction.amount_minor > 0 ? 'income' : 'expense';
-    }
-
-    return 'neutral';
-  }
-
-  protected transactionAmount(transaction: Transaction): number | null {
-    if (transaction.amount_minor === null) {
-      return null;
-    }
-
-    const direction = this.transactionDirection(transaction);
-    if (direction === 'expense') {
-      return -Math.abs(transaction.amount_minor);
-    }
-
-    if (direction === 'income') {
-      return Math.abs(transaction.amount_minor);
-    }
-
-    return transaction.amount_minor;
-  }
-
-  protected transactionSignDisplay(
-    transaction: Transaction,
-  ): MoneySignDisplay {
-    return this.transactionDirection(transaction) === 'neutral'
-      ? 'never'
-      : 'always';
-  }
-
-  protected transactionAmountClasses(transaction: Transaction): string {
-    const direction = this.transactionDirection(transaction);
-    if (direction === 'income') {
-      return 'text-emerald-600';
-    }
-
-    if (direction === 'expense') {
-      return 'text-rose-600';
-    }
-
-    return 'text-slate-700';
-  }
-
-  protected transactionBadgeClasses(transaction: Transaction): string {
-    const direction = this.transactionDirection(transaction);
-    if (direction === 'income') {
-      return 'bg-emerald-100 text-emerald-700';
-    }
-
-    if (direction === 'expense') {
-      return 'bg-rose-100 text-rose-700';
-    }
-
-    return 'bg-violet-100 text-violet-700';
   }
 
   protected transactionIconClasses(transaction: Transaction): string {

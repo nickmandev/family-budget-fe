@@ -12,6 +12,7 @@ import {
   OperationType,
   TransactionSource,
 } from '../../core/api/generated';
+import type { Transaction } from '../../core/api/generated';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import * as TransactionActions from '../../state/transaction/transaction.actions';
 import {
@@ -23,6 +24,13 @@ import {
   selectTransactionNextCursor,
 } from '../../state/transaction/transaction.selectors';
 import { selectCurrentHousehold } from '../../state/household/household.selectors';
+import {
+  operationTypeLabel,
+  signedAmountMinor,
+  transactionAmountClasses,
+  transactionBadgeClasses,
+  transactionSignDisplay,
+} from './transaction-display';
 
 const OPERATION_TYPES = Object.values(OperationType);
 const TRANSACTION_SOURCES = Object.values(TransactionSource);
@@ -104,62 +112,22 @@ export class TransactionListPageComponent {
   }
 
   protected typeLabel(type: string): string {
-    const labels: Record<string, string> = {
-      CARD_FEE_INTEREST: 'Card fee / interest',
-      CASH_REFUND: 'Cash refund',
-      CARD_REFUND: 'Card refund',
-      REVERSAL: 'Reversal',
-      REPLACEMENT: 'Replacement',
-      CATEGORY_CORRECTION: 'Category correction',
-      ACCOUNT_CORRECTION: 'Transaction correction',
-      METADATA_CORRECTION: 'Metadata correction',
-      RECONCILE_INCREASE: 'Reconciliation increase',
-      RECONCILE_DECREASE: 'Reconciliation decrease',
-    };
-    if (labels[type]) return labels[type];
-    return type.replaceAll('_', ' ').toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
+    return operationTypeLabel(type as OperationType);
   }
 
-  protected badgeClass(type: OperationType): string {
-    if (
-      type === OperationType.INCOME || type === OperationType.REIMBURSEMENT ||
-      type === OperationType.CASH_REFUND || type === OperationType.CARD_REFUND ||
-      type === OperationType.RECONCILE_INCREASE
-    ) {
-      return 'bg-emerald-100 text-emerald-700';
-    }
-    if (
-      type === OperationType.DEBIT_PURCHASE ||
-      type === OperationType.CASH_PURCHASE ||
-      type === OperationType.CARD_PURCHASE ||
-      type === OperationType.CARD_FEE_INTEREST ||
-      type === OperationType.REVERSAL ||
-      type === OperationType.RECONCILE_DECREASE
-    ) {
-      return 'bg-rose-100 text-rose-700';
-    }
-    if (type === OperationType.CARD_PAYMENT) {
-      return 'bg-fuchsia-100 text-fuchsia-700';
-    }
-    if (
-      type === OperationType.REPLACEMENT || type === OperationType.CATEGORY_CORRECTION ||
-      type === OperationType.ACCOUNT_CORRECTION || type === OperationType.METADATA_CORRECTION
-    ) {
-      return 'bg-fuchsia-100 text-fuchsia-700';
-    }
-    if (type.startsWith('TRANSFER_')) {
-      return 'bg-violet-100 text-violet-700';
-    }
-    return 'bg-slate-100 text-slate-700';
+  protected amountClasses(transaction: Transaction): string {
+    return transactionAmountClasses(transaction);
   }
 
-  protected amountClass(amount: number | null): string {
-    return amount === null
-      ? 'text-slate-500'
-      : amount > 0
-        ? 'text-emerald-600'
-        : amount < 0
-          ? 'text-rose-600'
-          : 'text-slate-700';
+  protected badgeClasses(transaction: Transaction): string {
+    return transactionBadgeClasses(transaction);
+  }
+
+  protected signDisplay(transaction: Transaction): 'always' | 'never' {
+    return transactionSignDisplay(transaction);
+  }
+
+  protected signedAmount(transaction: Transaction): number | null {
+    return signedAmountMinor(transaction);
   }
 }

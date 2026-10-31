@@ -3,20 +3,8 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, map, of, switchMap } from 'rxjs';
 
 import { BudgetService, TransactionsService } from '../../core/api/generated';
-import { ApiError } from '../../core/errors/api-error';
+import { toApiErrorMessage } from '../../core/errors/api-error-message';
 import * as BalanceActions from './balance.actions';
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'Something went wrong. Please try again.';
-}
 
 @Injectable()
 export class BalanceEffects {
@@ -35,7 +23,7 @@ export class BalanceEffects {
           catchError((error: unknown) =>
             of(
               BalanceActions.loadBalancesFailure({
-                error: toErrorMessage(error),
+                error: toApiErrorMessage(error),
               }),
             ),
           ),
@@ -57,7 +45,7 @@ export class BalanceEffects {
           catchError((error: unknown) =>
             of(
               BalanceActions.loadResolutionFailure({
-                error: toErrorMessage(error),
+                error: toApiErrorMessage(error),
               }),
             ),
           ),

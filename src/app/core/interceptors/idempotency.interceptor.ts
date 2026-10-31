@@ -1,5 +1,7 @@
 import { HttpContextToken, type HttpInterceptorFn } from '@angular/common/http';
 
+import { newIdempotencyKey } from '../api/idempotency';
+
 const IDEMPOTENT_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const HOUSEHOLDS_PATH_PREFIX = '/api/v1/households/';
 const IDEMPOTENCY_HEADER = 'Idempotency-Key';
@@ -38,10 +40,12 @@ export const idempotencyInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
+  // An explicit API-client header is used for a new request; the context key
+  // takes precedence on clones/retries, and a fresh key is the final fallback.
   const key =
     req.context.get(IDEMPOTENCY_KEY) ??
     req.headers.get(IDEMPOTENCY_HEADER) ??
-    crypto.randomUUID();
+    newIdempotencyKey();
 
   req.context.set(IDEMPOTENCY_KEY, key);
 

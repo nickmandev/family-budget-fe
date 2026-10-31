@@ -1,14 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { MockStore, provideMockStore } from '@ngrx/store/testing';
-import { of } from 'rxjs';
 
-import {
-  PlansService,
-  SuggestionsService,
-  TransactionsService,
-} from '../../core/api/generated';
 import { selectHouseholdLoading } from '../../state/household/household.selectors';
+import { initialPlanState } from '../../state/plan/plan.state';
+import { initialSuggestionState } from '../../state/suggestion/suggestion.state';
+import { initialTransactionState } from '../../state/transaction/transaction.state';
 import { DashboardPageComponent } from './dashboard-page.component';
 
 describe('DashboardPageComponent', () => {
@@ -37,17 +34,11 @@ describe('DashboardPageComponent', () => {
               loading: false,
               error: null,
             },
+            transactions: initialTransactionState,
+            plans: initialPlanState,
+            suggestions: initialSuggestionState,
           },
         }),
-        {
-          provide: TransactionsService,
-          useValue: { listTransactions: () => of({ items: [] }) },
-        },
-        { provide: PlansService, useValue: { listPlans: () => of({ items: [] }) } },
-        {
-          provide: SuggestionsService,
-          useValue: { listSuggestions: () => of({ items: [] }) },
-        },
       ],
     }).compileComponents();
   });

@@ -12,25 +12,17 @@ import {
 } from 'rxjs';
 
 import { PlansService } from '../../core/api/generated';
-import { ApiError } from '../../core/errors/api-error';
+import { newIdempotencyKey } from '../../core/api/idempotency';
+import { toApiErrorMessage } from '../../core/errors/api-error-message';
+import type { FriendlyErrorMap } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
 import * as PlanActions from './plan.actions';
 
-const FRIENDLY_ERRORS: Record<string, string> = {
+const PLAN_FRIENDLY_ERRORS: FriendlyErrorMap = {
   INSUFFICIENT_ENVELOPE_FUNDS: 'There are not enough available funds in this envelope. Add funds or use an emergency override.',
   OVERRIDE_REASON_REQUIRED: 'Enter a reason before using an emergency override.',
   AMOUNT_EXCEEDS_AUTHORIZATION: 'The final amount cannot exceed the plan’s authorized amount. Resize the plan first.',
 };
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return (error.code && FRIENDLY_ERRORS[error.code]) || `${error.code ? `${error.code}: ` : ''}${error.message}`;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return 'Something went wrong. Please try again.';
-}
 
 @Injectable()
 export class PlanEffects {
@@ -44,7 +36,7 @@ export class PlanEffects {
       switchMap(({ householdId }) =>
         this.plansService.listPlans({ id: householdId }).pipe(
           map(({ items }) => PlanActions.loadPlansSuccess({ plans: items })),
-          catchError((error: unknown) => of(PlanActions.loadPlansFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(PlanActions.loadPlansFailure({ error: toApiErrorMessage(error, PLAN_FRIENDLY_ERRORS) }))),
         ),
       ),
     ),
@@ -56,7 +48,7 @@ export class PlanEffects {
       switchMap(({ householdId, planId }) =>
         this.plansService.getPlan({ id: householdId, planID: planId }).pipe(
           map(({ data: plan }) => PlanActions.loadPlanSuccess({ plan })),
-          catchError((error: unknown) => of(PlanActions.loadPlanFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(PlanActions.loadPlanFailure({ error: toApiErrorMessage(error, PLAN_FRIENDLY_ERRORS) }))),
         ),
       ),
     ),
@@ -72,7 +64,7 @@ export class PlanEffects {
             PlanActions.loadPlans({ householdId }),
             BalanceActions.loadBalances({ householdId }),
           ]),
-          catchError((error: unknown) => of(PlanActions.createPlanFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(PlanActions.createPlanFailure({ error: toApiErrorMessage(error, PLAN_FRIENDLY_ERRORS) }))),
         ),
       ),
     ),
@@ -82,13 +74,13 @@ export class PlanEffects {
     this.actions$.pipe(
       ofType(PlanActions.authorizePlan),
       exhaustMap(({ householdId, planId, request }) =>
-        this.plansService.authorizePlan({ id: householdId, planID: planId, idempotencyKey: crypto.randomUUID(), authorizePlanRequest: request }).pipe(
+        this.plansService.authorizePlan({ id: householdId, planID: planId, idempotencyKey: newIdempotencyKey(), authorizePlanRequest: request }).pipe(
           mergeMap(({ data }) => [
             PlanActions.authorizePlanSuccess({ plan: data.plan, operation: data.operation }),
             PlanActions.loadPlans({ householdId }),
             BalanceActions.loadBalances({ householdId }),
           ]),
-          catchError((error: unknown) => of(PlanActions.authorizePlanFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(PlanActions.authorizePlanFailure({ error: toApiErrorMessage(error, PLAN_FRIENDLY_ERRORS) }))),
         ),
       ),
     ),
@@ -98,13 +90,13 @@ export class PlanEffects {
     this.actions$.pipe(
       ofType(PlanActions.resizePlan),
       exhaustMap(({ householdId, planId, request }) =>
-        this.plansService.resizePlan({ id: householdId, planID: planId, idempotencyKey: crypto.randomUUID(), resizePlanRequest: request }).pipe(
+        this.plansService.resizePlan({ id: householdId, planID: planId, idempotencyKey: newIdempotencyKey(), resizePlanRequest: request }).pipe(
           mergeMap(({ data }) => [
             PlanActions.resizePlanSuccess({ plan: data.plan, operation: data.operation }),
             PlanActions.loadPlans({ householdId }),
             BalanceActions.loadBalances({ householdId }),
           ]),
-          catchError((error: unknown) => of(PlanActions.resizePlanFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(PlanActions.resizePlanFailure({ error: toApiErrorMessage(error, PLAN_FRIENDLY_ERRORS) }))),
         ),
       ),
     ),
@@ -114,13 +106,13 @@ export class PlanEffects {
     this.actions$.pipe(
       ofType(PlanActions.completePlan),
       exhaustMap(({ householdId, planId, request }) =>
-        this.plansService.completePlan({ id: householdId, planID: planId, idempotencyKey: crypto.randomUUID(), completePlanRequest: request }).pipe(
+        this.plansService.completePlan({ id: householdId, planID: planId, idempotencyKey: newIdempotencyKey(), completePlanRequest: request }).pipe(
           mergeMap(({ data }) => [
             PlanActions.completePlanSuccess({ plan: data.plan, operation: data.operation }),
             PlanActions.loadPlans({ householdId }),
             BalanceActions.loadBalances({ householdId }),
           ]),
-          catchError((error: unknown) => of(PlanActions.completePlanFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(PlanActions.completePlanFailure({ error: toApiErrorMessage(error, PLAN_FRIENDLY_ERRORS) }))),
         ),
       ),
     ),
@@ -130,13 +122,13 @@ export class PlanEffects {
     this.actions$.pipe(
       ofType(PlanActions.cancelPlan),
       exhaustMap(({ householdId, planId, request }) =>
-        this.plansService.cancelPlan({ id: householdId, planID: planId, idempotencyKey: crypto.randomUUID(), cancelPlanRequest: request }).pipe(
+        this.plansService.cancelPlan({ id: householdId, planID: planId, idempotencyKey: newIdempotencyKey(), cancelPlanRequest: request }).pipe(
           mergeMap(({ data }) => [
             PlanActions.cancelPlanSuccess({ plan: data.plan, operation: data.operation ?? null }),
             PlanActions.loadPlans({ householdId }),
             BalanceActions.loadBalances({ householdId }),
           ]),
-          catchError((error: unknown) => of(PlanActions.cancelPlanFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(PlanActions.cancelPlanFailure({ error: toApiErrorMessage(error, PLAN_FRIENDLY_ERRORS) }))),
         ),
       ),
     ),
