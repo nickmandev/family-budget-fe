@@ -1,0 +1,121 @@
+<div class="mx-auto max-w-2xl">
+  <div class="mb-8">
+    <h2 class="text-2xl font-bold text-slate-900 md:text-3xl">
+      Create Household
+    </h2>
+    <p class="mt-1 text-slate-500">
+      Set up a household to organize your shared budget.
+    </p>
+  </div>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    class="space-y-5 rounded-2xl border border-violet-100 bg-white p-6 shadow-sm md:p-8"
+    novalidate
+  >
+    @if (error()) {
+      <div
+        role="alert"
+        class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+      >
+        {{ error() }}
+      </div>
+    }
+
+    <div>
+      <label
+        for="household-name"
+        class="mb-1.5 block text-sm font-medium text-slate-700"
+      >
+        Household name
+      </label>
+      <input
+        id="household-name"
+        type="text"
+        formControlName="name"
+        maxlength="120"
+        autocomplete="organization"
+        placeholder="e.g. The Smith Family"
+        class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+        [class.border-rose-300]="showError(form.controls.name)"
+        [attr.aria-invalid]="showError(form.controls.name)"
+        [attr.aria-describedby]="showError(form.controls.name) ? 'household-name-error' : null"
+      />
+      @if (showError(form.controls.name)) {
+        <p id="household-name-error" class="mt-1.5 text-sm text-rose-600">
+          @if (form.controls.name.hasError('required')) {
+            Household name is required.
+          } @else {
+            Household name must be 120 characters or fewer.
+          }
+        </p>
+      }
+    </div>
+
+    <div>
+      <label
+        for="household-currency"
+        class="mb-1.5 block text-sm font-medium text-slate-700"
+      >
+        Currency
+      </label>
+      <select
+        id="household-currency"
+        formControlName="currency"
+        class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+      >
+        @for (currency of currencies; track currency) {
+          <option [value]="currency">{{ currency }}</option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label
+        for="household-timezone"
+        class="mb-1.5 block text-sm font-medium text-slate-700"
+      >
+        Timezone
+      </label>
+      @if (timezones; as supportedTimezones) {
+        <select
+          id="household-timezone"
+          formControlName="timezone"
+          class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+        >
+          @for (timezone of supportedTimezones; track timezone) {
+            <option [value]="timezone">{{ timezone }}</option>
+          }
+        </select>
+      } @else {
+        <input
+          id="household-timezone"
+          type="text"
+          formControlName="timezone"
+          class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+        />
+      }
+    </div>
+
+    <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+      <a
+        routerLink="/households"
+        class="inline-flex items-center justify-center rounded-xl border border-violet-200 bg-white px-5 py-3 font-medium text-violet-700 transition-colors hover:bg-violet-50"
+      >
+        Cancel
+      </a>
+      <button
+        type="submit"
+        [disabled]="creating()"
+        class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600 hover:shadow-xl hover:shadow-violet-500/35 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+      >
+        @if (creating()) {
+          Creating…
+        } @else {
+          Create Household
+        }
+      </button>
+    </div>
+  </form>
+</div>

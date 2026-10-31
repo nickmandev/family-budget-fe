@@ -162,6 +162,22 @@ export const routes: Routes = [
         title: 'Edit account · Family Budget',
       },
       {
+        path: 'households/new',
+        loadComponent: () =>
+          import(
+            './features/households/pages/household-form/household-form-page.component'
+          ).then((m) => m.HouseholdFormPageComponent),
+        title: 'Create household · Family Budget',
+      },
+      {
+        path: 'households/:id/settings',
+        loadComponent: () =>
+          import(
+            './features/households/pages/household-settings/household-settings-page.component'
+          ).then((m) => m.HouseholdSettingsPageComponent),
+        title: 'Household settings · Family Budget',
+      },
+      {
         path: 'households',
         loadComponent: () =>
           import(
