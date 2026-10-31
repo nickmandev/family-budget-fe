@@ -5,10 +5,8 @@ import {
   effect,
   inject,
 } from '@angular/core';
-import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 
 import {
   AccountKind,
@@ -19,13 +17,7 @@ import type {
   AccountBalance,
   Deficit,
   EnvelopeBalance,
-  Plan,
   Transaction,
-} from '../../core/api/generated';
-import {
-  PlansService,
-  SuggestionsService,
-  TransactionsService,
 } from '../../core/api/generated';
 import {
   MoneyPipe,
@@ -50,22 +42,16 @@ import {
   selectCurrentHousehold,
   selectHouseholdLoading,
 } from '../../state/household/household.selectors';
-
-interface DashboardExtras {
-  transactions: Transaction[];
-  plans: Plan[];
-  pendingSuggestions: number;
-}
+import * as PlanActions from '../../state/plan/plan.actions';
+import { selectAllPlans } from '../../state/plan/plan.selectors';
+import * as SuggestionActions from '../../state/suggestion/suggestion.actions';
+import { selectAllSuggestions } from '../../state/suggestion/suggestion.selectors';
+import * as TransactionActions from '../../state/transaction/transaction.actions';
+import { selectAllTransactions } from '../../state/transaction/transaction.selectors';
 
 interface DeficitItem extends Deficit {
   label: string;
 }
-
-const EMPTY_EXTRAS: DashboardExtras = {
-  transactions: [],
-  plans: [],
-  pendingSuggestions: 0,
-};
 
 const ACTIVE_PLAN_STATES: ReadonlySet<PlanState> = new Set([
   PlanState.RESERVED,
@@ -105,12 +91,12 @@ const ACCOUNT_ICON_CLASSES: Record<AccountKind, string> = {
 })
 export class DashboardPageComponent {
   private readonly store = inject(Store);
-  private readonly transactionsService = inject(TransactionsService);
-  private readonly plansService = inject(PlansService);
-  private readonly suggestionsService = inject(SuggestionsService);
 
   private readonly household = this.store.selectSignal(selectCurrentHousehold);
   private readonly householdId = computed(() => this.household()?.id ?? null);
+  private readonly allTransactions = this.store.selectSignal(selectAllTransactions);
+  private readonly allPlans = this.store.selectSignal(selectAllPlans);
+  private readonly allSuggestions = this.store.selectSignal(selectAllSuggestions);
 
   protected readonly currentHousehold = this.household;
   protected readonly transactionTypeLabel = getTransactionTypeLabel;
@@ -173,49 +159,12 @@ export class DashboardPageComponent {
     }));
   });
 
-  private readonly extras$ = toObservable(this.householdId).pipe(
-    switchMap((householdId) => {
-      if (!householdId) {
-        return of(EMPTY_EXTRAS);
-      }
-
-      return forkJoin({
-        transactions: this.transactionsService
-          .listTransactions({ id: householdId, limit: 10 })
-          .pipe(
-            map((response) => response.items),
-            catchError(() => of([] as Transaction[])),
-          ),
-        plans: this.plansService.listPlans({ id: householdId }).pipe(
-          map((response) => response.items),
-          catchError(() => of([] as Plan[])),
-        ),
-        pendingSuggestions: this.suggestionsService
-          .listSuggestions({ id: householdId })
-          .pipe(
-            map(
-              (response) =>
-                response.items.filter(
-                  (suggestion) =>
-                    suggestion.state === SuggestionState.SUGGESTED ||
-                    suggestion.state === SuggestionState.EDITED,
-                ).length,
-            ),
-            catchError(() => of(0)),
-          ),
-      });
-    }),
-  );
-
-  private readonly extras = toSignal(this.extras$, {
-    initialValue: EMPTY_EXTRAS,
-  });
-
+  // Recent activity reflects the default 50-item transaction slice, limited to 10 here.
   protected readonly recentTransactions = computed(() =>
-    this.extras().transactions.slice(0, 10),
+    this.allTransactions().slice(0, 10),
   );
   protected readonly activePlans = computed(() =>
-    this.extras().plans.filter((plan) => ACTIVE_PLAN_STATES.has(plan.state)),
+    this.allPlans().filter((plan) => ACTIVE_PLAN_STATES.has(plan.state)),
   );
   protected readonly activePlansCount = computed(
     () => this.activePlans().length,
@@ -226,8 +175,12 @@ export class DashboardPageComponent {
       0,
     ),
   );
-  protected readonly pendingSuggestions = computed(
-    () => this.extras().pendingSuggestions,
+  protected readonly pendingSuggestions = computed(() =>
+    this.allSuggestions().filter(
+      (suggestion) =>
+        suggestion.state === SuggestionState.SUGGESTED ||
+        suggestion.state === SuggestionState.EDITED,
+    ).length,
   );
 
   // Reload whenever the selected household changes (including the first
@@ -240,6 +193,9 @@ export class DashboardPageComponent {
 
     this.store.dispatch(BalanceActions.loadBalances({ householdId }));
     this.store.dispatch(BalanceActions.loadResolution({ householdId }));
+    this.store.dispatch(TransactionActions.loadTransactions({ householdId }));
+    this.store.dispatch(PlanActions.loadPlans({ householdId }));
+    this.store.dispatch(SuggestionActions.loadSuggestions({ householdId }));
   });
 
   protected retry(): void {

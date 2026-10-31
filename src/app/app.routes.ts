@@ -185,14 +185,6 @@ export const routes: Routes = [
           ).then((m) => m.HouseholdListPageComponent),
         title: 'Households · Family Budget',
       },
-      {
-        path: 'health-test',
-        loadComponent: () =>
-          import('./features/health-test/health-test.component').then(
-            (m) => m.HealthTestComponent,
-          ),
-        title: 'API Health Check · Family Budget',
-      },
     ],
   },
   {
