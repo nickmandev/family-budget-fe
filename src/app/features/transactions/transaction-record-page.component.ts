@@ -6,6 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormArray,
@@ -27,6 +28,7 @@ import {
 } from '../../core/api/generated';
 import { MoneyInputDirective } from '../../shared/directives/money-input.directive';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
+import { todayInTimeZone } from '../../shared/utils/date';
 import * as AccountActions from '../../state/account/account.actions';
 import { selectAllAccounts } from '../../state/account/account.selectors';
 import * as EnvelopeActions from '../../state/envelope/envelope.actions';
@@ -49,12 +51,6 @@ type RecordKind =
   | 'CORRECTION'
   | 'RECONCILIATION';
 type RefundMethod = 'CASH' | 'CARD';
-
-function localDateString(): string {
-  const date = new Date();
-  const offset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
-}
 
 @Component({
   selector: 'app-transaction-record-page',
@@ -91,6 +87,7 @@ export class TransactionRecordPageComponent {
   protected readonly purchaseKinds = [PurchaseKind.DEBIT, PurchaseKind.CASH, PurchaseKind.CARD];
   protected readonly correctionKinds = Object.values(CorrectionKind);
   protected readonly refundSearch = signal('');
+  private dateTouched = false;
   protected readonly originalTransactions = signal<Transaction[]>([]);
   protected readonly filteredOriginalTransactions = computed(() => {
     const query = this.refundSearch().trim().toLowerCase();
@@ -122,8 +119,18 @@ export class TransactionRecordPageComponent {
     fundingRows: this.formBuilder.array([]),
     amountMinor: this.formBuilder.control<number | null>(null, [Validators.required, Validators.min(1)]),
     deltaMinor: this.formBuilder.control<number | null>(null, [Validators.required, (control) => control.value === 0 ? { nonZero: true } : null]),
-    effectiveDate: this.formBuilder.nonNullable.control(localDateString(), [Validators.required]),
+    effectiveDate: this.formBuilder.nonNullable.control(todayInTimeZone(this.household()?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone), [Validators.required]),
     reason: this.formBuilder.nonNullable.control(''),
+  });
+
+  private readonly syncEffectiveDate = effect(() => {
+    const household = this.household();
+    if (household && !this.dateTouched) {
+      this.form.controls.effectiveDate.patchValue(
+        todayInTimeZone(household.timezone),
+        { emitEvent: false },
+      );
+    }
   });
 
   private readonly loadReferenceData = effect((onCleanup) => {
@@ -145,6 +152,11 @@ export class TransactionRecordPageComponent {
   });
 
   constructor() {
+    this.form.controls.effectiveDate.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => {
+        this.dateTouched = true;
+      });
     this.syncValidators();
   }
 

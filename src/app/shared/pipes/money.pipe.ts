@@ -1,4 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
+import { minorUnitDigits } from '../utils/money';
 
 export type MoneySignDisplay = 'auto' | 'always' | 'never' | 'exceptZero';
 
@@ -27,7 +28,7 @@ export class MoneyPipe implements PipeTransform {
     }
 
     const formatter = this.formatter(currency, signDisplay);
-    const fractionDigits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
+    const fractionDigits = minorUnitDigits(currency);
 
     return formatter.format(value / 10 ** fractionDigits);
   }
@@ -46,12 +47,7 @@ export class MoneyPipe implements PipeTransform {
 
     let formatter: Intl.NumberFormat;
     try {
-      const reference = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: code,
-      });
-      const fractionDigits =
-        reference.resolvedOptions().maximumFractionDigits ?? 2;
+      const fractionDigits = minorUnitDigits(code);
 
       formatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
