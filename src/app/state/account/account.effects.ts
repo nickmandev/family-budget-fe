@@ -14,6 +14,7 @@ import {
 } from 'rxjs';
 
 import { BudgetService } from '../../core/api/generated';
+import { newIdempotencyKey } from '../../core/api/idempotency';
 import { toApiErrorMessage } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
 import * as AccountActions from './account.actions';
@@ -141,7 +142,7 @@ export class AccountEffects {
             .recordOpeningBalance({
               id: householdId,
               accountID: accountId,
-              idempotencyKey: crypto.randomUUID(),
+              idempotencyKey: newIdempotencyKey(),
               openingBalanceRequest: {
                 effective_date: effectiveDate,
                 delta_minor: deltaMinor,

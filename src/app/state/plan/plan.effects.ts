@@ -12,6 +12,7 @@ import {
 } from 'rxjs';
 
 import { PlansService } from '../../core/api/generated';
+import { newIdempotencyKey } from '../../core/api/idempotency';
 import { toApiErrorMessage } from '../../core/errors/api-error-message';
 import type { FriendlyErrorMap } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
@@ -73,7 +74,7 @@ export class PlanEffects {
     this.actions$.pipe(
       ofType(PlanActions.authorizePlan),
       exhaustMap(({ householdId, planId, request }) =>
-        this.plansService.authorizePlan({ id: householdId, planID: planId, idempotencyKey: crypto.randomUUID(), authorizePlanRequest: request }).pipe(
+        this.plansService.authorizePlan({ id: householdId, planID: planId, idempotencyKey: newIdempotencyKey(), authorizePlanRequest: request }).pipe(
           mergeMap(({ data }) => [
             PlanActions.authorizePlanSuccess({ plan: data.plan, operation: data.operation }),
             PlanActions.loadPlans({ householdId }),
@@ -89,7 +90,7 @@ export class PlanEffects {
     this.actions$.pipe(
       ofType(PlanActions.resizePlan),
       exhaustMap(({ householdId, planId, request }) =>
-        this.plansService.resizePlan({ id: householdId, planID: planId, idempotencyKey: crypto.randomUUID(), resizePlanRequest: request }).pipe(
+        this.plansService.resizePlan({ id: householdId, planID: planId, idempotencyKey: newIdempotencyKey(), resizePlanRequest: request }).pipe(
           mergeMap(({ data }) => [
             PlanActions.resizePlanSuccess({ plan: data.plan, operation: data.operation }),
             PlanActions.loadPlans({ householdId }),
@@ -105,7 +106,7 @@ export class PlanEffects {
     this.actions$.pipe(
       ofType(PlanActions.completePlan),
       exhaustMap(({ householdId, planId, request }) =>
-        this.plansService.completePlan({ id: householdId, planID: planId, idempotencyKey: crypto.randomUUID(), completePlanRequest: request }).pipe(
+        this.plansService.completePlan({ id: householdId, planID: planId, idempotencyKey: newIdempotencyKey(), completePlanRequest: request }).pipe(
           mergeMap(({ data }) => [
             PlanActions.completePlanSuccess({ plan: data.plan, operation: data.operation }),
             PlanActions.loadPlans({ householdId }),
@@ -121,7 +122,7 @@ export class PlanEffects {
     this.actions$.pipe(
       ofType(PlanActions.cancelPlan),
       exhaustMap(({ householdId, planId, request }) =>
-        this.plansService.cancelPlan({ id: householdId, planID: planId, idempotencyKey: crypto.randomUUID(), cancelPlanRequest: request }).pipe(
+        this.plansService.cancelPlan({ id: householdId, planID: planId, idempotencyKey: newIdempotencyKey(), cancelPlanRequest: request }).pipe(
           mergeMap(({ data }) => [
             PlanActions.cancelPlanSuccess({ plan: data.plan, operation: data.operation ?? null }),
             PlanActions.loadPlans({ householdId }),

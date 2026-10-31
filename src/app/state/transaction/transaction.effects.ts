@@ -14,6 +14,7 @@ import {
 } from 'rxjs';
 
 import { TransactionsService } from '../../core/api/generated';
+import { newIdempotencyKey } from '../../core/api/idempotency';
 import { toApiErrorMessage } from '../../core/errors/api-error-message';
 import type { FriendlyErrorMap } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
@@ -91,7 +92,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordIncome),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordIncome({ id: householdId, idempotencyKey: crypto.randomUUID(), incomeRequest: request })
+          .recordIncome({ id: householdId, idempotencyKey: newIdempotencyKey(), incomeRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordIncomeSuccess({ transaction }),
@@ -111,7 +112,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordPurchase),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordPurchase({ id: householdId, idempotencyKey: crypto.randomUUID(), purchaseRequest: request })
+          .recordPurchase({ id: householdId, idempotencyKey: newIdempotencyKey(), purchaseRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordPurchaseSuccess({ transaction }),
@@ -131,7 +132,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordTransfer),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordTransfer({ id: householdId, idempotencyKey: crypto.randomUUID(), transferRequest: request })
+          .recordTransfer({ id: householdId, idempotencyKey: newIdempotencyKey(), transferRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordTransferSuccess({ transaction }),
@@ -151,7 +152,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordCardPayment),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordCardPayment({ id: householdId, idempotencyKey: crypto.randomUUID(), cardPaymentRequest: request })
+          .recordCardPayment({ id: householdId, idempotencyKey: newIdempotencyKey(), cardPaymentRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordCardPaymentSuccess({ transaction }),
@@ -171,7 +172,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordCardFee),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordCardFee({ id: householdId, idempotencyKey: crypto.randomUUID(), cardFeeRequest: request })
+          .recordCardFee({ id: householdId, idempotencyKey: newIdempotencyKey(), cardFeeRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordCardFeeSuccess({ transaction }),
@@ -191,7 +192,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordRefund),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordRefund({ id: householdId, idempotencyKey: crypto.randomUUID(), refundRequest: request })
+          .recordRefund({ id: householdId, idempotencyKey: newIdempotencyKey(), refundRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordRefundSuccess({ transaction }),
@@ -211,7 +212,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordReversal),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .recordReversal({ id: householdId, idempotencyKey: crypto.randomUUID(), reversalRequest: request })
+          .recordReversal({ id: householdId, idempotencyKey: newIdempotencyKey(), reversalRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordReversalSuccess({ transaction }),
@@ -231,7 +232,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordCorrection),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .correctOperation({ id: householdId, idempotencyKey: crypto.randomUUID(), correctionRequest: request })
+          .correctOperation({ id: householdId, idempotencyKey: newIdempotencyKey(), correctionRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordCorrectionSuccess({ transaction }),
@@ -251,7 +252,7 @@ export class TransactionEffects {
       ofType(TransactionActions.recordReconciliation),
       exhaustMap(({ householdId, request }) =>
         this.transactionsService
-          .reconcileAccount({ id: householdId, idempotencyKey: crypto.randomUUID(), reconciliationRequest: request })
+          .reconcileAccount({ id: householdId, idempotencyKey: newIdempotencyKey(), reconciliationRequest: request })
           .pipe(
             mergeMap(({ data: transaction }) => [
               TransactionActions.recordReconciliationSuccess({ transaction }),

@@ -14,6 +14,7 @@ import {
 } from 'rxjs';
 
 import { BudgetService } from '../../core/api/generated';
+import { newIdempotencyKey } from '../../core/api/idempotency';
 import { toApiErrorMessage } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
 import * as EnvelopeActions from './envelope.actions';
@@ -124,7 +125,7 @@ export class EnvelopeEffects {
           this.budgetService
             .allocateFunds({
               id: householdId,
-              idempotencyKey: crypto.randomUUID(),
+              idempotencyKey: newIdempotencyKey(),
               allocationRequest: {
                 effective_date: effectiveDate,
                 envelope_id: envelopeId,
@@ -169,7 +170,7 @@ export class EnvelopeEffects {
           this.budgetService
             .reallocateFunds({
               id: householdId,
-              idempotencyKey: crypto.randomUUID(),
+              idempotencyKey: newIdempotencyKey(),
               reallocationRequest: {
                 effective_date: effectiveDate,
                 source_envelope_id: sourceEnvelopeId,
