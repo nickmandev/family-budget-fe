@@ -1,0 +1,202 @@
+<div class="mx-auto max-w-5xl space-y-8">
+  <div>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <a
+        routerLink="/households"
+        class="inline-flex items-center gap-1.5 text-sm font-medium text-violet-600 transition-colors hover:text-fuchsia-600"
+      >
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to households
+      </a>
+      <a
+        routerLink="/dashboard"
+        class="text-sm font-medium text-violet-600 transition-colors hover:text-fuchsia-600"
+      >
+        Go to dashboard
+      </a>
+    </div>
+    <h2 class="mt-4 text-2xl font-bold text-slate-900 md:text-3xl">
+      Household settings
+    </h2>
+  </div>
+
+  <section class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm md:p-8">
+    <h3 class="text-lg font-semibold text-slate-900">Household details</h3>
+    @if (household(); as current) {
+      <dl class="mt-5 grid gap-5 sm:grid-cols-2">
+        <div>
+          <dt class="text-sm text-slate-500">Name</dt>
+          <dd class="mt-1 font-medium text-slate-900">{{ current.name }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-slate-500">Currency</dt>
+          <dd class="mt-1 font-medium text-slate-900">{{ current.currency }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-slate-500">Timezone</dt>
+          <dd class="mt-1 font-medium text-slate-900">{{ current.timezone }}</dd>
+        </div>
+        <div>
+          <dt class="text-sm text-slate-500">Status</dt>
+          <dd class="mt-1">
+            <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+              {{ current.status }}
+            </span>
+          </dd>
+        </div>
+      </dl>
+    } @else if (householdLoading()) {
+      <div class="mt-5 h-20 animate-pulse rounded-xl bg-violet-50" aria-label="Loading household details"></div>
+    } @else {
+      <p class="mt-3 text-sm text-slate-500">Household details are not available.</p>
+    }
+  </section>
+
+  <section class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm md:p-8">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h3 class="text-lg font-semibold text-slate-900">Members</h3>
+        <p class="mt-1 text-sm text-slate-500">
+          Manage the people who can access this household.
+        </p>
+      </div>
+    </div>
+
+    @if (error()) {
+      <div
+        role="alert"
+        class="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+      >
+        {{ error() }}
+      </div>
+    }
+
+    @if (membersLoading()) {
+      <div class="mt-5 space-y-3" role="status" aria-label="Loading household members">
+        <div class="h-14 animate-pulse rounded-xl bg-violet-50"></div>
+        <div class="h-14 animate-pulse rounded-xl bg-violet-50"></div>
+        <span class="sr-only">Loading household members…</span>
+      </div>
+    } @else if (members().length === 0) {
+      <p class="mt-5 rounded-xl bg-violet-50 px-4 py-6 text-center text-sm text-slate-500">
+        No members found for this household.
+      </p>
+    } @else {
+      <div class="mt-5 overflow-x-auto">
+        <table class="w-full min-w-[600px] text-left text-sm">
+          <thead class="border-b border-violet-100 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th scope="col" class="px-3 py-3 font-medium">User ID</th>
+              <th scope="col" class="px-3 py-3 font-medium">Role</th>
+              <th scope="col" class="px-3 py-3 font-medium">Status</th>
+              <th scope="col" class="px-3 py-3 font-medium">Joined</th>
+              @if (isOwner()) {
+                <th scope="col" class="px-3 py-3 font-medium">Actions</th>
+              }
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-violet-50">
+            @for (member of members(); track member.user_id) {
+              <tr>
+                <td class="max-w-48 truncate px-3 py-4 font-mono text-slate-700" [title]="member.user_id">
+                  {{ member.user_id }}
+                </td>
+                <td class="px-3 py-4">
+                  @if (member.role === 'OWNER') {
+                    <span class="rounded-full bg-fuchsia-100 px-2.5 py-1 text-xs font-semibold text-fuchsia-700">OWNER</span>
+                  } @else {
+                    <span class="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700">MEMBER</span>
+                  }
+                </td>
+                <td class="px-3 py-4 text-slate-600">{{ member.status }}</td>
+                <td class="px-3 py-4 text-slate-600">{{ formatDate(member.joined_at) }}</td>
+                @if (isOwner()) {
+                  <td class="px-3 py-4">
+                    @if (member.role !== 'OWNER') {
+                      <button
+                        type="button"
+                        (click)="removeMember(member.user_id)"
+                        [disabled]="mutationLoading()"
+                        class="font-medium text-rose-600 transition-colors hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Remove
+                      </button>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (isOwner()) {
+      <form
+        [formGroup]="form"
+        (ngSubmit)="onSubmit()"
+        class="mt-8 border-t border-violet-100 pt-6"
+        novalidate
+      >
+        <h4 class="font-semibold text-slate-900">Add a member</h4>
+        <div class="mt-4 grid gap-4 sm:grid-cols-[1fr_12rem_auto] sm:items-end">
+          <div>
+            <label for="member-email" class="mb-1.5 block text-sm font-medium text-slate-700">Email address</label>
+            <input
+              id="member-email"
+              type="email"
+              formControlName="email"
+              autocomplete="email"
+              placeholder="name@example.com"
+              class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+              [class.border-rose-300]="showError(form.controls.email)"
+              [attr.aria-invalid]="showError(form.controls.email)"
+              [attr.aria-describedby]="showError(form.controls.email) ? 'member-email-error' : null"
+            />
+            @if (showError(form.controls.email)) {
+              <p id="member-email-error" class="mt-1.5 text-sm text-rose-600">
+                @if (form.controls.email.hasError('required')) {
+                  Email address is required.
+                } @else {
+                  Enter a valid email address.
+                }
+              </p>
+            }
+          </div>
+          <div>
+            <label for="member-role" class="mb-1.5 block text-sm font-medium text-slate-700">Role</label>
+            <select
+              id="member-role"
+              formControlName="role"
+              class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10"
+            >
+              @for (role of roleOptions; track role) {
+                <option [value]="role">{{ role }}</option>
+              }
+            </select>
+          </div>
+          <button
+            type="submit"
+            [disabled]="mutationLoading()"
+            class="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 hover:from-violet-700 hover:to-fuchsia-600 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+          >
+            @if (mutationLoading()) {
+              Adding…
+            } @else {
+              Add member
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </section>
+</div>
