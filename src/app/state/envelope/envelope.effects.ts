@@ -14,22 +14,10 @@ import {
 } from 'rxjs';
 
 import { BudgetService } from '../../core/api/generated';
-import { ApiError } from '../../core/errors/api-error';
+import { toApiErrorMessage } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
 import * as EnvelopeActions from './envelope.actions';
 import { selectEnvelopeIncludeArchived } from './envelope.selectors';
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'Something went wrong. Please try again.';
-}
 
 @Injectable()
 export class EnvelopeEffects {
@@ -51,7 +39,7 @@ export class EnvelopeEffects {
             catchError((error: unknown) =>
               of(
                 EnvelopeActions.loadEnvelopesFailure({
-                  error: toErrorMessage(error),
+                  error: toApiErrorMessage(error),
                 }),
               ),
             ),
@@ -82,7 +70,7 @@ export class EnvelopeEffects {
             catchError((error: unknown) =>
               of(
                 EnvelopeActions.createEnvelopeFailure({
-                  error: toErrorMessage(error),
+                  error: toApiErrorMessage(error),
                 }),
               ),
             ),
@@ -115,7 +103,7 @@ export class EnvelopeEffects {
               catchError((error: unknown) =>
                 of(
                   EnvelopeActions.updateEnvelopeFailure({
-                    error: toErrorMessage(error),
+                    error: toApiErrorMessage(error),
                   }),
                 ),
               ),
@@ -153,7 +141,7 @@ export class EnvelopeEffects {
               catchError((error: unknown) =>
                 of(
                   EnvelopeActions.allocateFundsFailure({
-                    error: toErrorMessage(error),
+                    error: toApiErrorMessage(error),
                   }),
                 ),
               ),
@@ -199,7 +187,7 @@ export class EnvelopeEffects {
               catchError((error: unknown) =>
                 of(
                   EnvelopeActions.reallocateFundsFailure({
-                    error: toErrorMessage(error),
+                    error: toApiErrorMessage(error),
                   }),
                 ),
               ),

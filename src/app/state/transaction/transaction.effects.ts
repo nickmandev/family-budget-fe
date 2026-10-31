@@ -14,31 +14,20 @@ import {
 } from 'rxjs';
 
 import { TransactionsService } from '../../core/api/generated';
-import { ApiError } from '../../core/errors/api-error';
+import { toApiErrorMessage } from '../../core/errors/api-error-message';
+import type { FriendlyErrorMap } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
 import * as TransactionActions from './transaction.actions';
 import { selectTransactionFilters, selectTransactionNextCursor } from './transaction.selectors';
 
-function toErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    if (error.code === 'ACCOUNT_SCOPE_CHANGE_REQUIRES_FUNDING_PLAN') {
-      return `${error.message} Provide an explicit funding plan using Ready to Assign or envelope amounts.`;
-    }
-    if (error.code === 'REFUND_EXCEEDS_REMAINDER') {
-      return 'This refund is larger than the refundable amount remaining on the original transaction.';
-    }
-    if (error.code === 'REVERSAL_EXCEEDS_REMAINDER') {
-      return 'This reversal is larger than the reversible amount remaining on the original transaction.';
-    }
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'Something went wrong. Please try again.';
-}
+const TRANSACTION_FRIENDLY_ERRORS: FriendlyErrorMap = {
+  ACCOUNT_SCOPE_CHANGE_REQUIRES_FUNDING_PLAN:
+    'Provide an explicit funding plan using Ready to Assign or envelope amounts.',
+  REFUND_EXCEEDS_REMAINDER:
+    'This refund is larger than the refundable amount remaining on the original transaction.',
+  REVERSAL_EXCEEDS_REMAINDER:
+    'This reversal is larger than the reversible amount remaining on the original transaction.',
+};
 
 @Injectable()
 export class TransactionEffects {
@@ -62,7 +51,7 @@ export class TransactionEffects {
               }),
             ),
             catchError((error: unknown) =>
-              of(TransactionActions.loadTransactionsFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.loadTransactionsFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -90,7 +79,7 @@ export class TransactionEffects {
               }),
             ),
             catchError((error: unknown) =>
-              of(TransactionActions.loadMoreTransactionsFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.loadMoreTransactionsFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           );
       }),
@@ -110,7 +99,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordIncomeFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordIncomeFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -130,7 +119,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordPurchaseFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordPurchaseFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -150,7 +139,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordTransferFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordTransferFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -170,7 +159,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordCardPaymentFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordCardPaymentFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -190,7 +179,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordCardFeeFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordCardFeeFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -210,7 +199,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordRefundFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordRefundFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -230,7 +219,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordReversalFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordReversalFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -250,7 +239,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordCorrectionFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordCorrectionFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),
@@ -270,7 +259,7 @@ export class TransactionEffects {
               BalanceActions.loadBalances({ householdId }),
             ]),
             catchError((error: unknown) =>
-              of(TransactionActions.recordReconciliationFailure({ error: toErrorMessage(error) })),
+              of(TransactionActions.recordReconciliationFailure({ error: toApiErrorMessage(error, TRANSACTION_FRIENDLY_ERRORS) })),
             ),
           ),
       ),

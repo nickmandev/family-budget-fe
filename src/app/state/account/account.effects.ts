@@ -14,22 +14,10 @@ import {
 } from 'rxjs';
 
 import { BudgetService } from '../../core/api/generated';
-import { ApiError } from '../../core/errors/api-error';
+import { toApiErrorMessage } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
 import * as AccountActions from './account.actions';
 import { selectAccountIncludeArchived } from './account.selectors';
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'Something went wrong. Please try again.';
-}
 
 @Injectable()
 export class AccountEffects {
@@ -53,7 +41,7 @@ export class AccountEffects {
             catchError((error: unknown) =>
               of(
                 AccountActions.loadAccountsFailure({
-                  error: toErrorMessage(error),
+                  error: toApiErrorMessage(error),
                 }),
               ),
             ),
@@ -90,7 +78,7 @@ export class AccountEffects {
               catchError((error: unknown) =>
                 of(
                   AccountActions.createAccountFailure({
-                    error: toErrorMessage(error),
+                    error: toApiErrorMessage(error),
                   }),
                 ),
               ),
@@ -131,7 +119,7 @@ export class AccountEffects {
               catchError((error: unknown) =>
                 of(
                   AccountActions.updateAccountFailure({
-                    error: toErrorMessage(error),
+                    error: toApiErrorMessage(error),
                   }),
                 ),
               ),
@@ -172,7 +160,7 @@ export class AccountEffects {
               catchError((error: unknown) =>
                 of(
                   AccountActions.recordOpeningBalanceFailure({
-                    error: toErrorMessage(error),
+                    error: toApiErrorMessage(error),
                   }),
                 ),
               ),

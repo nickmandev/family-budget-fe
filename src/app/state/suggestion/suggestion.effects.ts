@@ -4,19 +4,9 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, exhaustMap, map, mergeMap, of, switchMap, tap } from 'rxjs';
 
 import { SuggestionsService } from '../../core/api/generated';
-import { ApiError } from '../../core/errors/api-error';
+import { toApiErrorMessage } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
 import * as SuggestionActions from './suggestion.actions';
-
-function toErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return 'Something went wrong. Please try again.';
-}
 
 @Injectable()
 export class SuggestionEffects {
@@ -30,7 +20,7 @@ export class SuggestionEffects {
       switchMap(({ householdId }) =>
         this.suggestionsService.listSuggestions({ id: householdId }).pipe(
           map(({ items }) => SuggestionActions.loadSuggestionsSuccess({ suggestions: items })),
-          catchError((error: unknown) => of(SuggestionActions.loadSuggestionsFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(SuggestionActions.loadSuggestionsFailure({ error: toApiErrorMessage(error) }))),
         ),
       ),
     ),
@@ -45,7 +35,7 @@ export class SuggestionEffects {
             SuggestionActions.createSuggestionSuccess({ householdId, suggestion }),
             SuggestionActions.loadSuggestions({ householdId }),
           ]),
-          catchError((error: unknown) => of(SuggestionActions.createSuggestionFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(SuggestionActions.createSuggestionFailure({ error: toApiErrorMessage(error) }))),
         ),
       ),
     ),
@@ -60,7 +50,7 @@ export class SuggestionEffects {
             SuggestionActions.editSuggestionSuccess({ householdId, suggestion }),
             SuggestionActions.loadSuggestions({ householdId }),
           ]),
-          catchError((error: unknown) => of(SuggestionActions.editSuggestionFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(SuggestionActions.editSuggestionFailure({ error: toApiErrorMessage(error) }))),
         ),
       ),
     ),
@@ -75,7 +65,7 @@ export class SuggestionEffects {
             SuggestionActions.cancelSuggestionSuccess({ householdId, suggestion }),
             SuggestionActions.loadSuggestions({ householdId }),
           ]),
-          catchError((error: unknown) => of(SuggestionActions.cancelSuggestionFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(SuggestionActions.cancelSuggestionFailure({ error: toApiErrorMessage(error) }))),
         ),
       ),
     ),
@@ -96,7 +86,7 @@ export class SuggestionEffects {
             SuggestionActions.loadSuggestions({ householdId }),
             BalanceActions.loadBalances({ householdId }),
           ]),
-          catchError((error: unknown) => of(SuggestionActions.confirmSuggestionFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(SuggestionActions.confirmSuggestionFailure({ error: toApiErrorMessage(error) }))),
         ),
       ),
     ),
@@ -111,7 +101,7 @@ export class SuggestionEffects {
             SuggestionActions.convertSuggestionSuccess({ householdId, suggestion: data.suggestion, plan: data.plan }),
             SuggestionActions.loadSuggestions({ householdId }),
           ]),
-          catchError((error: unknown) => of(SuggestionActions.convertSuggestionFailure({ error: toErrorMessage(error) }))),
+          catchError((error: unknown) => of(SuggestionActions.convertSuggestionFailure({ error: toApiErrorMessage(error) }))),
         ),
       ),
     ),
