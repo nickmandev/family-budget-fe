@@ -14,8 +14,11 @@ API at `/api/v1` (same contract as the Android client).
 
 ## Prerequisites
 
-- Node.js 20+ (LTS recommended) and npm
+- Node.js 22+ and npm
 - The Go backend running locally for anything that hits the API
+
+Pull requests run verification only. Deployment to Cloudflare Pages runs only
+after a push or merge to `main`.
 
 ## Install
 
