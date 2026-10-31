@@ -69,8 +69,11 @@
                   <p class="font-medium text-slate-900">{{ transaction.reason || typeLabel(transaction.type) }}</p>
                   <p class="mt-0.5 text-xs text-slate-500">{{ typeLabel(transaction.type) }} · {{ typeLabel(transaction.source) }}</p>
                 </td>
-                <td class="px-6 py-4"><span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" [class]="badgeClass(transaction.type)">{{ typeLabel(transaction.type) }}</span></td>
-                <td class="whitespace-nowrap px-6 py-4 text-right font-semibold tabular-nums" [class]="amountClass(transaction.amount_minor)">{{ transaction.amount_minor | money: transaction.currency }}</td>
+                <td class="px-6 py-4"><span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold" [class]="badgeClasses(transaction)">{{ typeLabel(transaction.type) }}</span></td>
+                <td class="whitespace-nowrap px-6 py-4 text-right font-semibold tabular-nums" [class]="amountClasses(transaction)">
+                  @if (signedAmount(transaction) === null) { — }
+                  @else { {{ signedAmount(transaction) | money: transaction.currency : signDisplay(transaction) }} }
+                </td>
               </tr>
             }
           </tbody>

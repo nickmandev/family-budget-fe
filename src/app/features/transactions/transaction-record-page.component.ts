@@ -6,7 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormArray,
@@ -16,7 +16,7 @@ import {
 } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { EMPTY, expand, reduce } from 'rxjs';
+import { EMPTY, expand, reduce, take } from 'rxjs';
 
 import {
   AccountKind,
@@ -122,6 +122,12 @@ export class TransactionRecordPageComponent {
     effectiveDate: this.formBuilder.nonNullable.control(todayInTimeZone(this.household()?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone), [Validators.required]),
     reason: this.formBuilder.nonNullable.control(''),
   });
+  private readonly selectedKind = toSignal(
+    this.form.controls.kind.valueChanges,
+    { initialValue: this.form.controls.kind.value },
+  );
+  private readonly loadedOriginalHouseholdIds = new Set<string>();
+  private lastCorrectionPurchaseKind = this.form.controls.purchaseKind.value;
 
   private readonly syncEffectiveDate = effect(() => {
     const household = this.household();
@@ -133,22 +139,40 @@ export class TransactionRecordPageComponent {
     }
   });
 
-  private readonly loadReferenceData = effect((onCleanup) => {
+  private readonly loadReferenceData = effect(() => {
     const householdId = this.householdId();
-    if (householdId) {
-      this.store.dispatch(AccountActions.loadAccounts({ householdId, includeArchived: false }));
-      this.store.dispatch(EnvelopeActions.loadEnvelopes({ householdId, includeArchived: false }));
-      const subscription = this.transactionsService.listTransactions({ id: householdId, limit: 200 }).pipe(
-        expand((response) => response.next_cursor
-          ? this.transactionsService.listTransactions({ id: householdId, limit: 200, cursor: response.next_cursor })
-          : EMPTY),
-        reduce((recent, response) => [...recent, ...response.items].slice(-100), [] as Transaction[]),
-      ).subscribe({
-        next: (transactions) => this.originalTransactions.set(transactions),
-        error: () => this.originalTransactions.set([]),
-      });
-      onCleanup(() => subscription.unsubscribe());
+    if (!householdId) {
+      return;
     }
+
+    this.store.dispatch(AccountActions.loadAccounts({ householdId, includeArchived: false }));
+    this.store.dispatch(EnvelopeActions.loadEnvelopes({ householdId, includeArchived: false }));
+  });
+
+  private readonly loadOriginalTransactions = effect((onCleanup) => {
+    const householdId = this.householdId();
+    const needsOriginal = ['REFUND', 'REVERSAL', 'CORRECTION'].includes(
+      this.selectedKind(),
+    );
+    if (!householdId || !needsOriginal || this.loadedOriginalHouseholdIds.has(householdId)) {
+      return;
+    }
+
+    const subscription = this.transactionsService.listTransactions({ id: householdId, limit: 200 }).pipe(
+      expand((response) => response.next_cursor
+        ? this.transactionsService.listTransactions({ id: householdId, limit: 200, cursor: response.next_cursor })
+        : EMPTY),
+      take(5),
+      reduce((recent, response) => [...recent, ...response.items].slice(-100), [] as Transaction[]),
+    ).subscribe({
+      next: (transactions) => this.originalTransactions.set(transactions),
+      error: () => {
+        this.originalTransactions.set([]);
+        this.loadedOriginalHouseholdIds.add(householdId);
+      },
+      complete: () => this.loadedOriginalHouseholdIds.add(householdId),
+    });
+    onCleanup(() => subscription.unsubscribe());
   });
 
   constructor() {
@@ -242,7 +266,38 @@ export class TransactionRecordPageComponent {
     controls.deltaMinor.updateValueAndValidity({ emitEvent: false });
   }
 
+  protected onKindChange(): void {
+    const controls = this.form.controls;
+    for (const name of [
+      'accountId',
+      'destinationAccountId',
+      'cardAccountId',
+      'envelopeId',
+      'feeEnvelopeId',
+      'paymentEnvelopeId',
+      'originalEnvelopeId',
+      'correctedEnvelopeId',
+      'originalOperationId',
+      'replacementAccountId',
+      'replacementEnvelopeId',
+      'replacementPaymentEnvelopeId',
+    ] as const) {
+      controls[name].setValue('');
+    }
+    controls.replacementAmountMinor.setValue(null);
+    controls.fundingReadyMinor.setValue(null);
+    this.fundingRows().clear();
+    this.refundSearch.set('');
+    this.syncValidators();
+  }
+
   protected onPurchaseKindChange(): void {
+    if (this.form.controls.purchaseKind.value === PurchaseKind.CARD) {
+      this.form.controls.accountId.setValue('');
+    } else {
+      this.form.controls.cardAccountId.setValue('');
+      this.form.controls.paymentEnvelopeId.setValue('');
+    }
     this.syncValidators();
     if (this.form.controls.purchaseKind.value === PurchaseKind.CARD) {
       this.updatePaymentEnvelope();
@@ -254,11 +309,51 @@ export class TransactionRecordPageComponent {
   }
 
   protected onRefundMethodChange(): void {
+    if (this.form.controls.refundMethod.value === 'CARD') {
+      this.form.controls.accountId.setValue('');
+    } else {
+      this.form.controls.cardAccountId.setValue('');
+      this.form.controls.paymentEnvelopeId.setValue('');
+    }
     this.syncValidators();
     if (this.form.controls.refundMethod.value === 'CARD') this.updatePaymentEnvelope();
   }
 
   protected onCorrectionOptionsChange(): void {
+    const controls = this.form.controls;
+    const purchaseKindChanged =
+      controls.purchaseKind.value !== this.lastCorrectionPurchaseKind;
+    this.lastCorrectionPurchaseKind = controls.purchaseKind.value;
+    if (controls.correctionKind.value !== CorrectionKind.TRANSACTION) {
+      controls.replacementEnabled.setValue(false);
+      controls.replacementAccountId.setValue('');
+      controls.replacementEnvelopeId.setValue('');
+      controls.replacementPaymentEnvelopeId.setValue('');
+      controls.replacementAmountMinor.setValue(null);
+    }
+    if (controls.correctionKind.value === CorrectionKind.CATEGORY) {
+      controls.originalEnvelopeId.setValue('');
+      controls.correctedEnvelopeId.setValue('');
+    } else if (controls.correctionKind.value === CorrectionKind.TRANSACTION) {
+      controls.originalEnvelopeId.setValue('');
+      controls.correctedEnvelopeId.setValue('');
+      if (purchaseKindChanged) {
+        controls.replacementAccountId.setValue('');
+        controls.replacementEnvelopeId.setValue('');
+        controls.replacementPaymentEnvelopeId.setValue('');
+      }
+      if (!controls.replacementEnabled.value) {
+        controls.replacementAccountId.setValue('');
+        controls.replacementEnvelopeId.setValue('');
+        controls.replacementPaymentEnvelopeId.setValue('');
+        controls.replacementAmountMinor.setValue(null);
+      } else if (controls.purchaseKind.value !== PurchaseKind.CARD) {
+        controls.replacementPaymentEnvelopeId.setValue('');
+      }
+    } else {
+      controls.originalEnvelopeId.setValue('');
+      controls.correctedEnvelopeId.setValue('');
+    }
     this.syncValidators();
   }
 

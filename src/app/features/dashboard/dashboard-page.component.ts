@@ -12,7 +12,6 @@ import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 
 import {
   AccountKind,
-  OperationType,
   PlanState,
   SuggestionState,
 } from '../../core/api/generated';
@@ -30,9 +29,16 @@ import {
 } from '../../core/api/generated';
 import {
   MoneyPipe,
-  type MoneySignDisplay,
 } from '../../shared/pipes/money.pipe';
 import { formatEffectiveDate } from '../../shared/utils/date';
+import {
+  transactionAmountClasses as getTransactionAmountClasses,
+  transactionBadgeClasses as getTransactionBadgeClasses,
+  transactionDirection as getTransactionDirection,
+  transactionSignDisplay as getTransactionSignDisplay,
+  transactionTypeLabel as getTransactionTypeLabel,
+  signedAmountMinor,
+} from '../transactions/transaction-display';
 import * as BalanceActions from '../../state/balance/balance.actions';
 import {
   selectBalanceError,
@@ -44,8 +50,6 @@ import {
   selectCurrentHousehold,
   selectHouseholdLoading,
 } from '../../state/household/household.selectors';
-
-type TransactionDirection = 'income' | 'expense' | 'neutral';
 
 interface DashboardExtras {
   transactions: Transaction[];
@@ -63,59 +67,10 @@ const EMPTY_EXTRAS: DashboardExtras = {
   pendingSuggestions: 0,
 };
 
-const INCOME_OPERATIONS: ReadonlySet<OperationType> = new Set([
-  OperationType.INCOME,
-  OperationType.REIMBURSEMENT,
-  OperationType.CASH_REFUND,
-  OperationType.CARD_REFUND,
-  OperationType.OPENING_BALANCE,
-  OperationType.RECONCILE_INCREASE,
-]);
-
-const EXPENSE_OPERATIONS: ReadonlySet<OperationType> = new Set([
-  OperationType.DEBIT_PURCHASE,
-  OperationType.CASH_PURCHASE,
-  OperationType.CARD_PURCHASE,
-  OperationType.CARD_FEE_INTEREST,
-  OperationType.PURCHASE_COMPLETE,
-  OperationType.RECONCILE_DECREASE,
-]);
-
 const ACTIVE_PLAN_STATES: ReadonlySet<PlanState> = new Set([
   PlanState.RESERVED,
   PlanState.RESERVED_EXCEPTION,
 ]);
-
-const TRANSACTION_TYPE_LABELS: Partial<Record<OperationType, string>> = {
-  [OperationType.OPENING_BALANCE]: 'Opening',
-  [OperationType.INCOME]: 'Income',
-  [OperationType.REIMBURSEMENT]: 'Income',
-  [OperationType.ALLOCATE]: 'Allocation',
-  [OperationType.REALLOCATE]: 'Allocation',
-  [OperationType.DEBIT_PURCHASE]: 'Purchase',
-  [OperationType.CASH_PURCHASE]: 'Purchase',
-  [OperationType.CARD_PURCHASE]: 'Purchase',
-  [OperationType.CARD_PAYMENT]: 'Card payment',
-  [OperationType.CARD_FEE_INTEREST]: 'Card fee',
-  [OperationType.TRANSFER_ELIGIBLE]: 'Transfer',
-  [OperationType.TRANSFER_TO_ELIGIBLE]: 'Transfer',
-  [OperationType.TRANSFER_OUT_OF_SCOPE]: 'Transfer',
-  [OperationType.TRANSFER_EXCLUDED]: 'Transfer',
-  [OperationType.CASH_REFUND]: 'Refund',
-  [OperationType.CARD_REFUND]: 'Refund',
-  [OperationType.RESERVATION_CREATE]: 'Plan',
-  [OperationType.RESERVATION_RESIZE]: 'Plan',
-  [OperationType.RESERVATION_CANCEL]: 'Plan',
-  [OperationType.PURCHASE_COMPLETE]: 'Purchase',
-  [OperationType.EXTERNAL_TRANSACTION]: 'External',
-  [OperationType.REVERSAL]: 'Reversal',
-  [OperationType.REPLACEMENT]: 'Replacement',
-  [OperationType.CATEGORY_CORRECTION]: 'Correction',
-  [OperationType.ACCOUNT_CORRECTION]: 'Correction',
-  [OperationType.METADATA_CORRECTION]: 'Correction',
-  [OperationType.RECONCILE_INCREASE]: 'Reconciliation',
-  [OperationType.RECONCILE_DECREASE]: 'Reconciliation',
-};
 
 const ACCOUNT_KIND_LABELS: Record<AccountKind, string> = {
   [AccountKind.CHECKING]: 'Checking',
@@ -158,6 +113,13 @@ export class DashboardPageComponent {
   private readonly householdId = computed(() => this.household()?.id ?? null);
 
   protected readonly currentHousehold = this.household;
+  protected readonly transactionTypeLabel = getTransactionTypeLabel;
+  protected readonly formatEffectiveDate = formatEffectiveDate;
+  protected readonly transactionDirection = getTransactionDirection;
+  protected readonly transactionAmount = signedAmountMinor;
+  protected readonly transactionSignDisplay = getTransactionSignDisplay;
+  protected readonly transactionAmountClasses = getTransactionAmountClasses;
+  protected readonly transactionBadgeClasses = getTransactionBadgeClasses;
   protected readonly balances = this.store.selectSignal(selectBalances);
   protected readonly resolution = this.store.selectSignal(selectResolution);
   protected readonly loading = this.store.selectSignal(selectBalanceLoading);
@@ -331,17 +293,6 @@ export class DashboardPageComponent {
     return this.humanize(transaction.type);
   }
 
-  protected transactionTypeLabel(transaction: Transaction): string {
-    return (
-      TRANSACTION_TYPE_LABELS[transaction.type] ??
-      this.humanize(transaction.type)
-    );
-  }
-
-  protected transactionDate(transaction: Transaction): string {
-    return formatEffectiveDate(transaction.effective_date);
-  }
-
   protected transactionAccount(transaction: Transaction): string | null {
     const accountNameById = new Map(
       this.accounts().map((account) => [account.account_id, account.name]),
@@ -353,75 +304,6 @@ export class DashboardPageComponent {
     return posting?.account_id
       ? (accountNameById.get(posting.account_id) ?? null)
       : null;
-  }
-
-  protected transactionDirection(
-    transaction: Transaction,
-  ): TransactionDirection {
-    if (INCOME_OPERATIONS.has(transaction.type)) {
-      return 'income';
-    }
-
-    if (EXPENSE_OPERATIONS.has(transaction.type)) {
-      return 'expense';
-    }
-
-    if (transaction.amount_minor !== null && transaction.amount_minor !== 0) {
-      return transaction.amount_minor > 0 ? 'income' : 'expense';
-    }
-
-    return 'neutral';
-  }
-
-  protected transactionAmount(transaction: Transaction): number | null {
-    if (transaction.amount_minor === null) {
-      return null;
-    }
-
-    const direction = this.transactionDirection(transaction);
-    if (direction === 'expense') {
-      return -Math.abs(transaction.amount_minor);
-    }
-
-    if (direction === 'income') {
-      return Math.abs(transaction.amount_minor);
-    }
-
-    return transaction.amount_minor;
-  }
-
-  protected transactionSignDisplay(
-    transaction: Transaction,
-  ): MoneySignDisplay {
-    return this.transactionDirection(transaction) === 'neutral'
-      ? 'never'
-      : 'always';
-  }
-
-  protected transactionAmountClasses(transaction: Transaction): string {
-    const direction = this.transactionDirection(transaction);
-    if (direction === 'income') {
-      return 'text-emerald-600';
-    }
-
-    if (direction === 'expense') {
-      return 'text-rose-600';
-    }
-
-    return 'text-slate-700';
-  }
-
-  protected transactionBadgeClasses(transaction: Transaction): string {
-    const direction = this.transactionDirection(transaction);
-    if (direction === 'income') {
-      return 'bg-emerald-100 text-emerald-700';
-    }
-
-    if (direction === 'expense') {
-      return 'bg-rose-100 text-rose-700';
-    }
-
-    return 'bg-violet-100 text-violet-700';
   }
 
   protected transactionIconClasses(transaction: Transaction): string {

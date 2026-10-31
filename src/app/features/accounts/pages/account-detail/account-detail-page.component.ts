@@ -35,7 +35,7 @@ import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { formatEffectiveDate, todayInTimeZone } from '../../../../shared/utils/date';
 import * as AccountActions from '../../../../state/account/account.actions';
 import {
-  selectAccountById,
+  selectAllAccounts,
   selectAccountError,
   selectAccountLoading,
   selectOpeningBalanceSaving,
@@ -82,12 +82,17 @@ export class AccountDetailPageComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly transactionsService = inject(TransactionsService);
   private readonly actions$ = inject(Actions);
-  private readonly accountId =
-    inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
+  private readonly route = inject(ActivatedRoute);
+  private readonly routeParamId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('id') ?? '')),
+    { initialValue: '' },
+  );
+  private readonly accountId = computed(() => this.routeParamId());
 
   protected readonly household = this.store.selectSignal(selectCurrentHousehold);
-  protected readonly account = this.store.selectSignal(
-    selectAccountById(this.accountId),
+  private readonly allAccounts = this.store.selectSignal(selectAllAccounts);
+  protected readonly account = computed(
+    () => this.allAccounts().find((account) => account.id === this.accountId()) ?? null,
   );
   protected readonly loading = this.store.selectSignal(selectAccountLoading);
   protected readonly saving = this.store.selectSignal(
@@ -289,7 +294,7 @@ export class AccountDetailPageComponent {
     const posting = transaction.postings.find(
       (entry) =>
         entry.kind === PostingKind.ACCOUNT &&
-        entry.account_id === this.accountId,
+        entry.account_id === this.accountId(),
     );
 
     return posting?.delta_minor ?? 0;
