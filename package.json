@@ -11,6 +11,9 @@
     "deploy": "wrangler pages deploy",
     "generate:api": "bash scripts/generate-api-client.sh"
   },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "private": true,
   "dependencies": {
     "@angular/common": "^19.2.0",
