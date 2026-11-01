@@ -213,7 +213,7 @@
           <div>
             <label for="replacement-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Replacement purchase amount ({{ currency() }})</label>
             <input id="replacement-amount" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="replacementAmountMinor" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
-            <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.replacementAmountMinor)" aria-live="polite">@if (showError(form.controls.replacementAmountMinor)) { Enter a positive replacement purchase amount. }</p>
+            <p class="mt-1.5 min-h-10 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.replacementAmountMinor)" aria-live="polite">@if (showError(form.controls.replacementAmountMinor)) { Enter a positive replacement amount. }</p>
           </div>
         }
       }
@@ -222,13 +222,13 @@
       <div>
         <label for="record-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Amount ({{ currency() }})</label>
         <input id="record-amount" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="amountMinor" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="showError(amount)" [attr.aria-invalid]="showError(amount)" />
-        <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(amount)" aria-live="polite">@if (showError(amount)) { Enter a positive amount with valid {{ currency() }} precision. }</p>
+        <p class="mt-1.5 min-h-10 text-sm leading-5 text-rose-600" [class.invisible]="!showError(amount)" aria-live="polite">@if (showError(amount)) { Enter a positive amount in {{ currency() }}. }</p>
       </div>
       } @else {
         <div>
           <label for="reconciliation-delta" class="mb-1.5 block text-sm font-medium text-slate-700">Balance adjustment ({{ currency() }})</label>
           <input id="reconciliation-delta" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="deltaMinor" placeholder="Positive or negative amount" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
-          <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.deltaMinor)" aria-live="polite">@if (showError(form.controls.deltaMinor)) { Enter a non-zero adjustment; use a negative amount to decrease the balance. }</p>
+          <p class="mt-1.5 min-h-10 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.deltaMinor)" aria-live="polite">@if (showError(form.controls.deltaMinor)) { Enter a non-zero adjustment; use a negative amount to decrease the balance. }</p>
         </div>
       }
 

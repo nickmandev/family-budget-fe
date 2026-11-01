@@ -42,14 +42,14 @@ describe('TransactionRecordPageComponent validation layout', () => {
     const errorSlot = amount.parentElement?.querySelector('p');
 
     expect(errorSlot).not.toBeNull();
-    expect(errorSlot?.classList.contains('min-h-5')).toBeTrue();
+    expect(errorSlot?.classList.contains('min-h-10')).toBeTrue();
     expect(errorSlot?.textContent?.trim()).toBe('');
     const reservedHeight = errorSlot?.getBoundingClientRect().height;
 
     component.form.get('amountMinor')?.markAsTouched();
     fixture.detectChanges();
 
-    expect(errorSlot?.textContent).toContain('Enter a positive amount');
+    expect(errorSlot?.textContent).toContain('Enter a positive amount in USD');
     expect(errorSlot?.getBoundingClientRect().height).toBe(reservedHeight);
   });
 });
