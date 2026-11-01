@@ -70,15 +70,11 @@
             [attr.aria-invalid]="showError(email)"
             [attr.aria-describedby]="showError(email) ? 'login-email-error' : null"
           />
-          @if (showError(email)) {
-            <p id="login-email-error" class="mt-1.5 text-sm text-rose-600">
-              @if (email.hasError('required')) {
-                Email is required.
-              } @else {
-                Enter a valid email address.
-              }
-            </p>
-          }
+          <p id="login-email-error" class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(email)" aria-live="polite">
+            @if (showError(email)) {
+              @if (email.hasError('required')) { Email is required. } @else { Enter a valid email address. }
+            }
+          </p>
         </div>
 
         <div>
@@ -96,15 +92,11 @@
             [attr.aria-invalid]="showError(password)"
             [attr.aria-describedby]="showError(password) ? 'login-password-error' : null"
           />
-          @if (showError(password)) {
-            <p id="login-password-error" class="mt-1.5 text-sm text-rose-600">
-              @if (password.hasError('required')) {
-                Password is required.
-              } @else {
-                Password must be at least 8 characters.
-              }
-            </p>
-          }
+          <p id="login-password-error" class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(password)" aria-live="polite">
+            @if (showError(password)) {
+              @if (password.hasError('required')) { Password is required. } @else { Password must be at least 8 characters. }
+            }
+          </p>
         </div>
 
         <button

@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 
-import { LifecycleStatus, PlanKind } from '../../core/api/generated';
+import { PlanKind } from '../../core/api/generated';
 import { MoneyInputDirective } from '../../shared/directives/money-input.directive';
 import * as AccountActions from '../../state/account/account.actions';
 import { selectAllAccounts } from '../../state/account/account.selectors';
@@ -13,6 +13,7 @@ import { selectActiveEnvelopes } from '../../state/envelope/envelope.selectors';
 import * as PlanActions from '../../state/plan/plan.actions';
 import { selectPlanError, selectPlanSaving } from '../../state/plan/plan.selectors';
 import { selectCurrentHousehold } from '../../state/household/household.selectors';
+import { isEligibleCashAccount } from '../accounts/account-display';
 
 @Component({
   selector: 'app-plan-form-page',
@@ -31,7 +32,16 @@ export class PlanFormPageComponent {
   protected readonly saving = this.store.selectSignal(selectPlanSaving);
   protected readonly error = this.store.selectSignal(selectPlanError);
   protected readonly planKinds = [PlanKind.PURCHASE, PlanKind.REPAYMENT];
-  protected readonly activeAccounts = computed(() => this.accounts().filter((account) => account.status === LifecycleStatus.ACTIVE));
+  protected readonly repaymentAccounts = computed(() =>
+    this.accounts().filter(isEligibleCashAccount),
+  );
+  protected readonly planEnvelopes = computed(() =>
+    this.envelopes().filter((envelope) =>
+      this.isRepayment()
+        ? envelope.linked_card_account_id !== null
+        : envelope.linked_card_account_id === null,
+    ),
+  );
 
   protected readonly form = this.formBuilder.nonNullable.group({
     kind: this.formBuilder.nonNullable.control<PlanKind>(PlanKind.PURCHASE, Validators.required),
@@ -42,6 +52,16 @@ export class PlanFormPageComponent {
   private readonly planKind = toSignal(this.form.controls.kind.valueChanges, { initialValue: PlanKind.PURCHASE });
   protected readonly isRepayment = computed(() => this.planKind() === PlanKind.REPAYMENT);
 
+  private readonly requireRepaymentSourceAccount = effect(() => {
+    const control = this.form.controls.targetAccountId;
+    const repayment = this.isRepayment();
+    control.setValidators(repayment ? [Validators.required] : []);
+    if (!repayment) {
+      control.setValue('', { emitEvent: false });
+    }
+    control.updateValueAndValidity({ emitEvent: false });
+  });
+
   private readonly loadRelatedData = effect(() => {
     const householdId = this.householdId();
     if (householdId) {
@@ -50,7 +70,9 @@ export class PlanFormPageComponent {
     }
   });
 
-  protected getControl(name: 'kind' | 'targetEnvelopeId' | 'amountMinor'): AbstractControl {
+  protected getControl(
+    name: 'kind' | 'targetEnvelopeId' | 'targetAccountId' | 'amountMinor',
+  ): AbstractControl {
     return this.form.controls[name];
   }
 

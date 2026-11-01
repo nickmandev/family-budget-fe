@@ -77,11 +77,9 @@
           [attr.aria-invalid]="showError(name)"
           [attr.aria-describedby]="showError(name) ? 'account-name-error' : null"
         />
-        @if (showError(name)) {
-          <p id="account-name-error" class="mt-1.5 text-sm text-rose-600">
-            Account name is required.
-          </p>
-        }
+        <p id="account-name-error" class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(name)" aria-live="polite">
+          @if (showError(name)) { Account name is required. }
+        </p>
       </div>
 
       <div>

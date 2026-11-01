@@ -14,7 +14,6 @@ import {
   SuggestionState,
 } from '../../core/api/generated';
 import type {
-  AccountBalance,
   Deficit,
   EnvelopeBalance,
   Transaction,
@@ -23,6 +22,7 @@ import {
   MoneyPipe,
 } from '../../shared/pipes/money.pipe';
 import { formatEffectiveDate } from '../../shared/utils/date';
+import { accountBalancePresentation } from '../accounts/account-display';
 import {
   transactionAmountClasses as getTransactionAmountClasses,
   transactionBadgeClasses as getTransactionBadgeClasses,
@@ -106,6 +106,7 @@ export class DashboardPageComponent {
   protected readonly transactionSignDisplay = getTransactionSignDisplay;
   protected readonly transactionAmountClasses = getTransactionAmountClasses;
   protected readonly transactionBadgeClasses = getTransactionBadgeClasses;
+  protected readonly accountBalancePresentation = accountBalancePresentation;
   protected readonly balances = this.store.selectSignal(selectBalances);
   protected readonly resolution = this.store.selectSignal(selectResolution);
   protected readonly loading = this.store.selectSignal(selectBalanceLoading);
@@ -220,10 +221,6 @@ export class DashboardPageComponent {
     return (
       ACCOUNT_ICON_CLASSES[kind] ?? ACCOUNT_ICON_CLASSES[AccountKind.CHECKING]
     );
-  }
-
-  protected accountAmountClasses(account: AccountBalance): string {
-    return account.posted_minor < 0 ? 'text-rose-600' : 'text-slate-900';
   }
 
   protected envelopeTotal(envelope: EnvelopeBalance): number {

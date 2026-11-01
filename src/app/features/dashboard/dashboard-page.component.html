@@ -283,6 +283,7 @@
           } @else {
             <div class="divide-y divide-violet-50">
               @for (account of accounts(); track account.account_id) {
+                @let presentation = accountBalancePresentation(account);
                 <div
                   class="flex items-center justify-between gap-4 px-6 py-4 transition-colors hover:bg-violet-50/50"
                 >
@@ -318,16 +319,22 @@
                   <div class="shrink-0 text-right">
                     <p
                       class="font-semibold"
-                      [class]="accountAmountClasses(account)"
+                      [class]="presentation.toneClass"
                     >
-                      {{ account.posted_minor | money: currency() }}
+                      {{ presentation.amountMinor | money: currency() }}
                     </p>
-                    <p class="text-xs text-slate-500">
-                      {{ account.spendable_minor | money: currency() }} spendable
-                    </p>
-                    @if (account.reserved_minor !== 0) {
-                      <p class="text-xs text-fuchsia-600">
-                        {{ account.reserved_minor | money: currency() }} reserved
+                    @if (presentation.showSpendable) {
+                      <p class="text-xs text-slate-500">
+                        {{ account.spendable_minor | money: currency() }} spendable
+                      </p>
+                      @if (account.reserved_minor !== 0) {
+                        <p class="text-xs text-fuchsia-600">
+                          {{ account.reserved_minor | money: currency() }} reserved
+                        </p>
+                      }
+                    } @else {
+                      <p class="text-xs text-slate-500">
+                        {{ presentation.caption }}
                       </p>
                     }
                   </div>

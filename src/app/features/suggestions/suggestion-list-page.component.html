@@ -37,12 +37,12 @@
           <div>
             <label for="suggestion-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Amount ({{ household()?.currency ?? 'EUR' }})</label>
             <input id="suggestion-amount" type="text" inputmode="decimal" [appMoneyInput]="household()?.currency ?? 'EUR'" formControlName="amountMinor" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="showCreateError(createForm.controls.amountMinor)" />
-            @if (showCreateError(createForm.controls.amountMinor)) { <p class="mt-1.5 text-sm text-rose-600">Enter a positive amount with valid currency precision.</p> }
+            <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showCreateError(createForm.controls.amountMinor)" aria-live="polite">@if (showCreateError(createForm.controls.amountMinor)) { Enter a positive amount with valid currency precision. }</p>
           </div>
           <div class="sm:col-span-2">
             <label for="suggestion-merchant" class="mb-1.5 block text-sm font-medium text-slate-700">Merchant</label>
             <input id="suggestion-merchant" type="text" formControlName="merchant" maxlength="200" placeholder="e.g. Grocery store" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="showCreateError(createForm.controls.merchant)" />
-            @if (showCreateError(createForm.controls.merchant)) { <p class="mt-1.5 text-sm text-rose-600">Enter a merchant name.</p> }
+            <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showCreateError(createForm.controls.merchant)" aria-live="polite">@if (showCreateError(createForm.controls.merchant)) { Enter a merchant name. }</p>
           </div>
         </div>
         <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -108,7 +108,7 @@
                         <option value="">Select an account</option>
                         @for (account of confirmAccounts(); track account.id) { <option [value]="account.id">{{ account.name }} · {{ accountKindLabel(account.kind) }}</option> }
                       </select>
-                      @if (actionError(actionForm.controls.accountId)) { <p class="mt-1 text-sm text-rose-600">Select an account.</p> }
+                       <p class="mt-1 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!actionError(actionForm.controls.accountId)" aria-live="polite">@if (actionError(actionForm.controls.accountId)) { Select an account. }</p>
                     </div>
                     <div>
                       <label for="confirm-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Envelope</label>
@@ -116,7 +116,7 @@
                         <option value="">Select an envelope</option>
                         @for (envelope of activeEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
                       </select>
-                      @if (actionError(actionForm.controls.envelopeId)) { <p class="mt-1 text-sm text-rose-600">Select an envelope.</p> }
+                       <p class="mt-1 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!actionError(actionForm.controls.envelopeId)" aria-live="polite">@if (actionError(actionForm.controls.envelopeId)) { Select an envelope. }</p>
                     </div>
                     @if (actionForm.controls.purchaseKind.value === 'CARD') {
                       <div>
@@ -125,7 +125,7 @@
                           <option value="">Select an envelope</option>
                           @for (envelope of paymentEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
                         </select>
-                        @if (actionError(actionForm.controls.paymentEnvelopeId)) { <p class="mt-1 text-sm text-rose-600">Select the payment envelope.</p> }
+                         <p class="mt-1 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!actionError(actionForm.controls.paymentEnvelopeId)" aria-live="polite">@if (actionError(actionForm.controls.paymentEnvelopeId)) { Select the payment envelope. }</p>
                       </div>
                     }
                     <div>
@@ -143,7 +143,7 @@
                     <div>
                       <label for="edit-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Amount ({{ household()?.currency ?? 'EUR' }})</label>
                       <input id="edit-amount" type="text" inputmode="decimal" [appMoneyInput]="household()?.currency ?? 'EUR'" formControlName="amountMinor" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
-                      @if (actionError(actionForm.controls.amountMinor)) { <p class="mt-1 text-sm text-rose-600">Enter a positive amount.</p> }
+                       <p class="mt-1 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!actionError(actionForm.controls.amountMinor)" aria-live="polite">@if (actionError(actionForm.controls.amountMinor)) { Enter a positive amount. }</p>
                     </div>
                     <div>
                       <label for="edit-merchant" class="mb-1.5 block text-sm font-medium text-slate-700">Merchant</label>
@@ -154,31 +154,40 @@
                   <div>
                     <label for="cancel-reason" class="mb-1.5 block text-sm font-medium text-slate-700">Reason for cancellation</label>
                     <textarea id="cancel-reason" formControlName="reason" rows="3" maxlength="500" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" placeholder="Tell us why this suggestion is being dismissed"></textarea>
-                    @if (actionError(actionForm.controls.reason)) { <p class="mt-1 text-sm text-rose-600">A cancellation reason is required.</p> }
+                     <p class="mt-1 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!actionError(actionForm.controls.reason)" aria-live="polite">@if (actionError(actionForm.controls.reason)) { A cancellation reason is required. }</p>
                   </div>
                 } @else {
                   <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label for="convert-kind" class="mb-1.5 block text-sm font-medium text-slate-700">Plan type</label>
-                      <select id="convert-kind" formControlName="planKind" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+                      <select id="convert-kind" formControlName="planKind" (change)="onPlanKindChange()" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
                         @for (kind of planKinds; track kind) { <option [value]="kind">{{ kind }}</option> }
                       </select>
                     </div>
                     <div>
-                      <label for="convert-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Target envelope</label>
+                      <label for="convert-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">{{ actionForm.controls.planKind.value === 'REPAYMENT' ? 'Card payment envelope' : 'Target envelope' }}</label>
                       <select id="convert-envelope" formControlName="targetEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="actionError(actionForm.controls.targetEnvelopeId)">
                         <option value="">Select an envelope</option>
-                        @for (envelope of activeEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+                        @for (envelope of conversionEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
                       </select>
-                      @if (actionError(actionForm.controls.targetEnvelopeId)) { <p class="mt-1 text-sm text-rose-600">Select a target envelope.</p> }
+                       <p class="mt-1 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!actionError(actionForm.controls.targetEnvelopeId)" aria-live="polite">@if (actionError(actionForm.controls.targetEnvelopeId)) { Select a target envelope. }</p>
+                      @if (actionForm.controls.planKind.value === 'REPAYMENT' && conversionEnvelopes().length === 0) { <p class="mt-1 text-sm text-amber-700">Create a card payment envelope before converting this to a repayment plan.</p> }
                     </div>
                     @if (actionForm.controls.planKind.value === 'REPAYMENT') {
                       <div>
-                        <label for="convert-account" class="mb-1.5 block text-sm font-medium text-slate-700">Target account (optional)</label>
-                        <select id="convert-account" formControlName="targetAccountId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
-                          <option value="">No account selected</option>
-                          @for (account of activeAccounts(); track account.id) { <option [value]="account.id">{{ account.name }}</option> }
-                        </select>
+                        <label for="convert-account" class="mb-1.5 block text-sm font-medium text-slate-700">Source cash account</label>
+                        @if (repaymentAccounts().length === 0) {
+                          <p class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                            A repayment requires an active, budget-eligible cash account.
+                            <a routerLink="/accounts/new" class="font-semibold underline">Add account</a>
+                          </p>
+                        } @else {
+                          <select id="convert-account" formControlName="targetAccountId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="actionError(actionForm.controls.targetAccountId)">
+                            <option value="">Choose a cash account</option>
+                            @for (account of repaymentAccounts(); track account.id) { <option [value]="account.id">{{ account.name }} · {{ accountKindLabel(account.kind) }}</option> }
+                          </select>
+                          <p class="mt-1 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!actionError(actionForm.controls.targetAccountId)" aria-live="polite">@if (actionError(actionForm.controls.targetAccountId)) { Choose the cash account that will fund the repayment. }</p>
+                        }
                       </div>
                     }
                   </div>

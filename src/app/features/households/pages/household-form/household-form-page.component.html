@@ -42,15 +42,11 @@
         [attr.aria-invalid]="showError(form.controls.name)"
         [attr.aria-describedby]="showError(form.controls.name) ? 'household-name-error' : null"
       />
-      @if (showError(form.controls.name)) {
-        <p id="household-name-error" class="mt-1.5 text-sm text-rose-600">
-          @if (form.controls.name.hasError('required')) {
-            Household name is required.
-          } @else {
-            Household name must be 120 characters or fewer.
-          }
-        </p>
-      }
+      <p id="household-name-error" class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.name)" aria-live="polite">
+        @if (showError(form.controls.name)) {
+          @if (form.controls.name.hasError('required')) { Household name is required. } @else { Household name must be 120 characters or fewer. }
+        }
+      </p>
     </div>
 
     <div>
@@ -72,15 +68,11 @@
       <p class="mt-1.5 text-sm text-slate-500">
         Three-letter ISO 4217 code, e.g. EUR, USD, GBP.
       </p>
-      @if (showError(form.controls.currency)) {
-        <p id="household-currency-error" class="mt-1.5 text-sm text-rose-600">
-          @if (form.controls.currency.hasError('required')) {
-            Currency is required.
-          } @else {
-            Currency must be a three-letter uppercase code.
-          }
-        </p>
-      }
+      <p id="household-currency-error" class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.currency)" aria-live="polite">
+        @if (showError(form.controls.currency)) {
+          @if (form.controls.currency.hasError('required')) { Currency is required. } @else { Currency must be a three-letter uppercase code. }
+        }
+      </p>
     </div>
 
     <div>

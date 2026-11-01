@@ -103,11 +103,9 @@
             showError(name) ? 'account-edit-name-error' : null
           "
         />
-        @if (showError(name)) {
-          <p id="account-edit-name-error" class="mt-1.5 text-sm text-rose-600">
-            Account name is required.
-          </p>
-        }
+        <p id="account-edit-name-error" class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(name)" aria-live="polite">
+          @if (showError(name)) { Account name is required. }
+        </p>
       </div>
 
       <div
