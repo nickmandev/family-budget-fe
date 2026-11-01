@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 import {
   AccountKind,
@@ -27,6 +28,7 @@ import {
   selectSuggestionsSaving,
 } from '../../state/suggestion/suggestion.selectors';
 import { selectCurrentHousehold } from '../../state/household/household.selectors';
+import { isEligibleCashAccount } from '../accounts/account-display';
 
 type ListFilter = 'ALL' | 'OPEN' | 'DONE';
 type SuggestionAction = 'CONFIRM' | 'EDIT' | 'CANCEL' | 'CONVERT';
@@ -58,6 +60,9 @@ export class SuggestionListPageComponent {
   protected readonly planKinds = Object.values(PlanKind);
   protected readonly activeAccounts = computed(() =>
     this.accounts().filter((account) => account.status === LifecycleStatus.ACTIVE),
+  );
+  protected readonly repaymentAccounts = computed(() =>
+    this.activeAccounts().filter(isEligibleCashAccount),
   );
   protected readonly activeEnvelopes = computed(() => this.envelopes());
   protected readonly filteredSuggestions = computed(() => {
@@ -96,6 +101,17 @@ export class SuggestionListPageComponent {
     targetEnvelopeId: this.formBuilder.nonNullable.control(''),
     targetAccountId: this.formBuilder.nonNullable.control(''),
   });
+  private readonly convertPlanKind = toSignal(
+    this.actionForm.controls.planKind.valueChanges,
+    { initialValue: PlanKind.PURCHASE },
+  );
+  protected readonly conversionEnvelopes = computed(() =>
+    this.activeEnvelopes().filter((envelope) =>
+      this.convertPlanKind() === PlanKind.REPAYMENT
+        ? envelope.linked_card_account_id !== null
+        : envelope.linked_card_account_id === null,
+    ),
+  );
 
   private readonly loadReferenceData = effect(() => {
     const householdId = this.householdId();
@@ -164,6 +180,7 @@ export class SuggestionListPageComponent {
         : [],
     );
     this.actionForm.controls.targetEnvelopeId.setValidators(action === 'CONVERT' ? [Validators.required] : []);
+    this.updateConversionAccountValidator();
     for (const control of Object.values(this.actionForm.controls)) {
       control.updateValueAndValidity({ emitEvent: false });
     }
@@ -195,6 +212,10 @@ export class SuggestionListPageComponent {
     paymentControl.setValidators(isCard ? [Validators.required] : []);
     paymentControl.setValue('');
     paymentControl.updateValueAndValidity();
+  }
+
+  protected onPlanKindChange(): void {
+    this.updateConversionAccountValidator();
   }
 
   protected confirmAccounts() {
@@ -295,5 +316,18 @@ export class SuggestionListPageComponent {
 
   private updatePaymentEnvelope(): void {
     this.actionForm.controls.paymentEnvelopeId.setValue(this.paymentEnvelopes()[0]?.id ?? '');
+  }
+
+  private updateConversionAccountValidator(): void {
+    const targetAccount = this.actionForm.controls.targetAccountId;
+    const requiresSourceAccount =
+      this.activeAction() === 'CONVERT' &&
+      this.actionForm.controls.planKind.value === PlanKind.REPAYMENT;
+
+    targetAccount.setValidators(requiresSourceAccount ? [Validators.required] : []);
+    if (!requiresSourceAccount) {
+      targetAccount.setValue('', { emitEvent: false });
+    }
+    targetAccount.updateValueAndValidity({ emitEvent: false });
   }
 }

@@ -1,4 +1,5 @@
 import { AccountKind, LifecycleStatus } from '../../core/api/generated';
+import type { Account, AccountBalance } from '../../core/api/generated';
 
 export const ACCOUNT_KIND_LABELS: Record<AccountKind, string> = {
   [AccountKind.CHECKING]: 'Checking',
@@ -30,6 +31,63 @@ export const ACCOUNT_STATUS_BADGE_CLASSES: Record<LifecycleStatus, string> = {
   [LifecycleStatus.ACTIVE]: 'bg-emerald-100 text-emerald-700',
   [LifecycleStatus.ARCHIVED]: 'bg-slate-100 text-slate-600',
 };
+
+/** A valid cash source for planned purchases and repayments. */
+export function isEligibleCashAccount(
+  account: Pick<Account, 'kind' | 'budget_eligible' | 'status'>,
+): boolean {
+  return (
+    account.status === LifecycleStatus.ACTIVE &&
+    account.budget_eligible &&
+    account.kind !== AccountKind.CREDIT_CARD_LIABILITY
+  );
+}
+
+export interface AccountBalancePresentation {
+  amountMinor: number;
+  caption: string | null;
+  toneClass: string;
+  showSpendable: boolean;
+}
+
+/** Presents positive card-liability balances as debt owed, not spendable cash. */
+export function accountBalancePresentation(
+  account: AccountBalance,
+): AccountBalancePresentation {
+  if (account.kind === AccountKind.CREDIT_CARD_LIABILITY) {
+    if (account.posted_minor > 0) {
+      return {
+        amountMinor: account.posted_minor,
+        caption: 'owed',
+        toneClass: 'text-rose-600',
+        showSpendable: false,
+      };
+    }
+
+    if (account.posted_minor < 0) {
+      return {
+        amountMinor: Math.abs(account.posted_minor),
+        caption: 'credit balance',
+        toneClass: 'text-emerald-600',
+        showSpendable: false,
+      };
+    }
+
+    return {
+      amountMinor: 0,
+      caption: 'paid off',
+      toneClass: 'text-slate-900',
+      showSpendable: false,
+    };
+  }
+
+  return {
+    amountMinor: account.posted_minor,
+    caption: null,
+    toneClass: account.posted_minor < 0 ? 'text-rose-600' : 'text-slate-900',
+    showSpendable: true,
+  };
+}
 
 export const ACCOUNT_KIND_OPTIONS: readonly {
   value: AccountKind;
