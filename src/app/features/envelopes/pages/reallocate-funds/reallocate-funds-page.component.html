@@ -16,7 +16,7 @@
         <option value="">Select a source</option>
         @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
       </select>
-      @if (showError(form.controls.sourceEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select a source envelope.</p> }
+      <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.sourceEnvelopeId)" aria-live="polite">@if (showError(form.controls.sourceEnvelopeId)) { Select a source envelope. }</p>
     </div>
     <div>
       <label for="reallocate-destination" class="mb-1.5 block text-sm font-medium text-slate-700">Destination envelope</label>
@@ -24,12 +24,12 @@
         <option value="">Select a destination</option>
         @for (envelope of envelopes(); track envelope.id) { @if (envelope.id !== form.controls.sourceEnvelopeId.value) { <option [value]="envelope.id">{{ envelope.name }}</option> } }
       </select>
-      @if (showError(form.controls.destinationEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select a different destination envelope.</p> }
+      <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.destinationEnvelopeId)" aria-live="polite">@if (showError(form.controls.destinationEnvelopeId)) { Select a different destination envelope. }</p>
     </div>
     <div>
       <label for="reallocate-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Amount ({{ currency() }})</label>
       <input id="reallocate-amount" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="amount" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="showError(amount)" [attr.aria-invalid]="showError(amount)" />
-      @if (showError(amount)) { <p class="mt-1.5 text-sm text-rose-600">Enter a positive amount with valid {{ currency() }} precision.</p> }
+      <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(amount)" aria-live="polite">@if (showError(amount)) { Enter a positive amount with valid {{ currency() }} precision. }</p>
     </div>
     <div>
       <label for="reallocate-date" class="mb-1.5 block text-sm font-medium text-slate-700">Effective date</label>

@@ -230,20 +230,11 @@
                   "
                 />
               </div>
-              @if (showError(amount)) {
-                <p
-                  id="opening-balance-amount-error"
-                  class="mt-1.5 text-sm text-rose-600"
-                >
-                  @if (amount.hasError('required')) {
-                    Enter an amount.
-                  } @else if (amount.hasError('zero')) {
-                    Enter a non-zero amount.
-                  } @else {
-                    Enter a valid amount.
-                  }
-                </p>
-              }
+              <p id="opening-balance-amount-error" class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(amount)" aria-live="polite">
+                @if (showError(amount)) {
+                  @if (amount.hasError('required')) { Enter an amount. } @else if (amount.hasError('zero')) { Enter a non-zero amount. } @else { Enter a valid amount. }
+                }
+              </p>
             </div>
 
             <div>
@@ -261,11 +252,9 @@
                 [class.border-rose-300]="showError(effectiveDate)"
                 [attr.aria-invalid]="showError(effectiveDate)"
               />
-              @if (showError(effectiveDate)) {
-                <p class="mt-1.5 text-sm text-rose-600">
-                  Choose an effective date.
-                </p>
-              }
+              <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(effectiveDate)" aria-live="polite">
+                @if (showError(effectiveDate)) { Choose an effective date. }
+              </p>
             </div>
 
             <div>

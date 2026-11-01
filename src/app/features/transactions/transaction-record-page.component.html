@@ -65,7 +65,7 @@
           <option value="">Select original transaction</option>
           @for (transaction of filteredOriginalTransactions(); track transaction.id) { <option [value]="transaction.id">{{ originalLabel(transaction) }} {{ transaction.amount_minor | money: transaction.currency }}</option> }
         </select>
-        @if (showError(form.controls.originalOperationId)) { <p class="mt-1.5 text-sm text-rose-600">Select the original transaction.</p> }
+        <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.originalOperationId)" aria-live="polite">@if (showError(form.controls.originalOperationId)) { Select the original transaction. }</p>
       </div>
     }
 
@@ -83,7 +83,7 @@
             <option value="">Select an account</option>
             @for (account of cashAccounts(); track account.id) { <option [value]="account.id">{{ account.name }}</option> }
           </select>
-          @if (showError(form.controls.accountId)) { <p class="mt-1.5 text-sm text-rose-600">Select an account.</p> }
+          <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.accountId)" aria-live="polite">@if (showError(form.controls.accountId)) { Select an account. }</p>
         </div>
       }
 
@@ -94,7 +94,7 @@
             <option value="">Select destination</option>
             @for (account of cashAccounts(); track account.id) { <option [value]="account.id">{{ account.name }}</option> }
           </select>
-          @if (showError(form.controls.destinationAccountId)) { <p class="mt-1.5 text-sm text-rose-600">Select a destination account.</p> }
+          <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.destinationAccountId)" aria-live="polite">@if (showError(form.controls.destinationAccountId)) { Select a destination account. }</p>
         </div>
       }
 
@@ -105,7 +105,7 @@
             <option value="">Select a card</option>
             @for (account of cardAccounts(); track account.id) { <option [value]="account.id">{{ account.name }}</option> }
           </select>
-          @if (showError(form.controls.cardAccountId)) { <p class="mt-1.5 text-sm text-rose-600">Select a credit card.</p> }
+          <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.cardAccountId)" aria-live="polite">@if (showError(form.controls.cardAccountId)) { Select a credit card. }</p>
         </div>
       }
 
@@ -116,7 +116,7 @@
             <option value="">Select an envelope</option>
             @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
           </select>
-          @if (showError(form.controls.envelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select a spending envelope.</p> }
+          <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.envelopeId)" aria-live="polite">@if (showError(form.controls.envelopeId)) { Select a spending envelope. }</p>
         </div>
       }
 
@@ -127,7 +127,7 @@
             <option value="">Select a fee envelope</option>
             @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
           </select>
-          @if (showError(form.controls.feeEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select the fee envelope.</p> }
+          <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.feeEnvelopeId)" aria-live="polite">@if (showError(form.controls.feeEnvelopeId)) { Select the fee envelope. }</p>
         </div>
       }
 
@@ -138,7 +138,7 @@
             <option value="">Select a spending envelope</option>
             @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
           </select>
-          @if (showError(form.controls.envelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select a spending envelope.</p> }
+          <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.envelopeId)" aria-live="polite">@if (showError(form.controls.envelopeId)) { Select a spending envelope. }</p>
         </div>
       }
 
@@ -149,7 +149,7 @@
             <option value="">Select the payment envelope</option>
             @for (envelope of paymentEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
           </select>
-          @if (showError(form.controls.paymentEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select the card's payment envelope.</p> }
+          <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.paymentEnvelopeId)" aria-live="polite">@if (showError(form.controls.paymentEnvelopeId)) { Select the card's payment envelope. }</p>
         </div>
       }
 
@@ -160,7 +160,7 @@
             <option value="">Select original envelope</option>
             @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
           </select>
-          @if (showError(form.controls.originalEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select the original envelope.</p> }
+          <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.originalEnvelopeId)" aria-live="polite">@if (showError(form.controls.originalEnvelopeId)) { Select the original envelope. }</p>
         </div>
         <div>
           <label for="corrected-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Corrected envelope</label>
@@ -168,7 +168,7 @@
             <option value="">Select corrected envelope</option>
             @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
           </select>
-          @if (showError(form.controls.correctedEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select the corrected envelope.</p> }
+          <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.correctedEnvelopeId)" aria-live="polite">@if (showError(form.controls.correctedEnvelopeId)) { Select the corrected envelope. }</p>
         </div>
       }
 
@@ -190,7 +190,7 @@
               <option value="">Select account</option>
               @for (account of replacementAccounts(); track account.id) { <option [value]="account.id">{{ account.name }}</option> }
             </select>
-            @if (showError(form.controls.replacementAccountId)) { <p class="mt-1.5 text-sm text-rose-600">Select the replacement account.</p> }
+            <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.replacementAccountId)" aria-live="polite">@if (showError(form.controls.replacementAccountId)) { Select the replacement account. }</p>
           </div>
           <div>
             <label for="replacement-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Replacement envelope</label>
@@ -198,7 +198,7 @@
               <option value="">Select envelope</option>
               @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
             </select>
-            @if (showError(form.controls.replacementEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select the replacement envelope.</p> }
+            <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.replacementEnvelopeId)" aria-live="polite">@if (showError(form.controls.replacementEnvelopeId)) { Select the replacement envelope. }</p>
           </div>
           @if (form.controls.purchaseKind.value === 'CARD') {
             <div>
@@ -207,13 +207,13 @@
                 <option value="">Select payment envelope</option>
                 @for (envelope of replacementPaymentEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
               </select>
-              @if (showError(form.controls.replacementPaymentEnvelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select the card payment envelope.</p> }
+              <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.replacementPaymentEnvelopeId)" aria-live="polite">@if (showError(form.controls.replacementPaymentEnvelopeId)) { Select the card payment envelope. }</p>
             </div>
           }
           <div>
             <label for="replacement-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Replacement purchase amount ({{ currency() }})</label>
             <input id="replacement-amount" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="replacementAmountMinor" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
-            @if (showError(form.controls.replacementAmountMinor)) { <p class="mt-1.5 text-sm text-rose-600">Enter a positive replacement purchase amount.</p> }
+            <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.replacementAmountMinor)" aria-live="polite">@if (showError(form.controls.replacementAmountMinor)) { Enter a positive replacement purchase amount. }</p>
           </div>
         }
       }
@@ -222,20 +222,20 @@
       <div>
         <label for="record-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Amount ({{ currency() }})</label>
         <input id="record-amount" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="amountMinor" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="showError(amount)" [attr.aria-invalid]="showError(amount)" />
-        @if (showError(amount)) { <p class="mt-1.5 text-sm text-rose-600">Enter a positive amount with valid {{ currency() }} precision.</p> }
+        <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(amount)" aria-live="polite">@if (showError(amount)) { Enter a positive amount with valid {{ currency() }} precision. }</p>
       </div>
       } @else {
         <div>
           <label for="reconciliation-delta" class="mb-1.5 block text-sm font-medium text-slate-700">Balance adjustment ({{ currency() }})</label>
           <input id="reconciliation-delta" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="deltaMinor" placeholder="Positive or negative amount" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
-          @if (showError(form.controls.deltaMinor)) { <p class="mt-1.5 text-sm text-rose-600">Enter a non-zero adjustment; use a negative amount to decrease the balance.</p> }
+          <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.deltaMinor)" aria-live="polite">@if (showError(form.controls.deltaMinor)) { Enter a non-zero adjustment; use a negative amount to decrease the balance. }</p>
         </div>
       }
 
       <div>
         <label for="record-date" class="mb-1.5 block text-sm font-medium text-slate-700">Effective date</label>
         <input id="record-date" type="date" formControlName="effectiveDate" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
-        @if (showError(form.controls.effectiveDate)) { <p class="mt-1.5 text-sm text-rose-600">Select an effective date.</p> }
+        <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.effectiveDate)" aria-live="polite">@if (showError(form.controls.effectiveDate)) { Select an effective date. }</p>
       </div>
     </div>
 
@@ -271,7 +271,7 @@
     <div>
       <label for="record-reason" class="mb-1.5 block text-sm font-medium text-slate-700">Description / reason {{ form.controls.kind.value === 'REVERSAL' || form.controls.kind.value === 'RECONCILIATION' ? '(required)' : '(optional)' }}</label>
       <input id="record-reason" type="text" formControlName="reason" placeholder="What was this transaction for?" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
-      @if (showError(form.controls.reason)) { <p class="mt-1.5 text-sm text-rose-600">Enter a reason for this transaction.</p> }
+      <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.reason)" aria-live="polite">@if (showError(form.controls.reason)) { Enter a reason for this transaction. }</p>
     </div>
 
     <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">

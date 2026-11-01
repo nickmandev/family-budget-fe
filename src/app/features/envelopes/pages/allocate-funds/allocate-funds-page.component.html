@@ -17,12 +17,12 @@
         <option value="">Select an envelope</option>
         @for (envelope of envelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
       </select>
-      @if (showError(form.controls.envelopeId)) { <p class="mt-1.5 text-sm text-rose-600">Select an envelope.</p> }
+      <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.envelopeId)" aria-live="polite">@if (showError(form.controls.envelopeId)) { Select an envelope. }</p>
     </div>
     <div>
       <label for="allocate-amount" class="mb-1.5 block text-sm font-medium text-slate-700">Amount ({{ currency() }})</label>
       <input id="allocate-amount" type="text" inputmode="decimal" [appMoneyInput]="currency()" formControlName="amount" placeholder="0.00" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="showError(amount)" [attr.aria-invalid]="showError(amount)" />
-      @if (showError(amount)) { <p class="mt-1.5 text-sm text-rose-600">Enter a positive amount with valid {{ currency() }} precision.</p> }
+      <p class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(amount)" aria-live="polite">@if (showError(amount)) { Enter a positive amount with valid {{ currency() }} precision. }</p>
     </div>
     <div>
       <label for="allocate-date" class="mb-1.5 block text-sm font-medium text-slate-700">Effective date</label>

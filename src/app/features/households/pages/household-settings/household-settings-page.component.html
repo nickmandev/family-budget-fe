@@ -162,15 +162,11 @@
               [attr.aria-invalid]="showError(form.controls.email)"
               [attr.aria-describedby]="showError(form.controls.email) ? 'member-email-error' : null"
             />
-            @if (showError(form.controls.email)) {
-              <p id="member-email-error" class="mt-1.5 text-sm text-rose-600">
-                @if (form.controls.email.hasError('required')) {
-                  Email address is required.
-                } @else {
-                  Enter a valid email address.
-                }
-              </p>
-            }
+            <p id="member-email-error" class="mt-1.5 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!showError(form.controls.email)" aria-live="polite">
+              @if (showError(form.controls.email)) {
+                @if (form.controls.email.hasError('required')) { Email address is required. } @else { Enter a valid email address. }
+              }
+            </p>
           </div>
           <div>
             <label for="member-role" class="mb-1.5 block text-sm font-medium text-slate-700">Role</label>
