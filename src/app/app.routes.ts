@@ -6,6 +6,14 @@ import { ShellComponent } from './features/shell/shell.component';
 
 export const routes: Routes = [
   {
+    path: 'bank/callback',
+    loadComponent: () =>
+      import('./features/bank/bank-callback-page.component').then(
+        (m) => m.BankCallbackPageComponent,
+      ),
+    title: 'Bank connection · Family Budget',
+  },
+  {
     path: 'login',
     loadComponent: () =>
       import('./features/auth/pages/login/login-page.component').then(

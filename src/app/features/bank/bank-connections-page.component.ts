@@ -126,7 +126,11 @@ export class BankConnectionsPageComponent {
       next: ({ redirect_url: redirectUrl }) => {
         try {
           const parsedUrl = new URL(redirectUrl);
-          if (parsedUrl.protocol !== 'https:' || parsedUrl.host !== 'auth.enablebanking.com') {
+          if (
+            parsedUrl.origin !== 'https://auth.enablebanking.com' ||
+            parsedUrl.username !== '' ||
+            parsedUrl.password !== ''
+          ) {
             throw new Error('The bank returned an unsafe connection link. Please try again.');
           }
           this.redirector.assign(redirectUrl);
