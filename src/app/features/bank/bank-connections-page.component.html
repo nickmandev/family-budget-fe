@@ -1,0 +1,130 @@
+<div class="mx-auto max-w-5xl space-y-8">
+  <div>
+    <a
+      routerLink="/households"
+      class="inline-flex items-center gap-1.5 text-sm font-medium text-violet-600 transition-colors hover:text-fuchsia-600"
+    >
+      <span aria-hidden="true">←</span> Back to households
+    </a>
+    <h2 class="mt-4 text-2xl font-bold text-slate-900 md:text-3xl">Bank connections</h2>
+  </div>
+
+  @if (!householdId()) {
+    <section class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm" role="status">
+      <h3 class="font-semibold text-slate-900">Household not found</h3>
+      <p class="mt-2 text-sm text-slate-600">A household is required to manage bank connections.</p>
+    </section>
+  } @else if (membersLoading()) {
+    <section class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm" role="status" aria-label="Checking household access">
+      <div class="h-5 w-48 animate-pulse rounded bg-violet-100"></div>
+      <span class="sr-only">Checking household access…</span>
+    </section>
+  } @else if (!isOwner()) {
+    <section class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm">
+      <h3 class="text-lg font-semibold text-slate-900">Owner access required</h3>
+      <p class="mt-2 text-sm text-slate-600">Only a household owner can view or manage bank connections.</p>
+    </section>
+  } @else {
+    @if (error()) {
+      <div role="alert" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        {{ error() }}
+      </div>
+    }
+
+    <section class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm md:p-8">
+      <h3 class="text-lg font-semibold text-slate-900">Your bank data, under your control</h3>
+      <p class="mt-2 text-sm leading-6 text-slate-600">
+        This connection reads account information and transactions only. Imported transactions arrive as suggestions and must be confirmed before they affect your budget. You can revoke access at any time by disconnecting the bank.
+      </p>
+    </section>
+
+    <section class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm md:p-8">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-semibold text-slate-900">Available banks</h3>
+          <p class="mt-1 text-sm text-slate-500">Choose a bank to securely give read-only access.</p>
+        </div>
+        <button type="button" (click)="refreshBanks()" [disabled]="banksLoading() || startingConnection()" class="rounded-xl border border-violet-200 px-4 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-50 disabled:opacity-50" aria-label="Refresh available banks">
+          Refresh banks
+        </button>
+      </div>
+      <div class="mt-5">
+        <label for="bank-search" class="mb-1.5 block text-sm font-medium text-slate-700">Search banks</label>
+        <input id="bank-search" type="search" [value]="searchQuery()" (input)="onSearchChange($any($event.target).value)" placeholder="Search by bank name" class="w-full rounded-xl border border-violet-200 px-4 py-3 outline-none transition-all focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
+      </div>
+
+      @if (banksLoading()) {
+        <div class="mt-5 space-y-3" role="status" aria-label="Loading available banks">
+          <div class="h-16 animate-pulse rounded-xl bg-violet-50"></div>
+          <div class="h-16 animate-pulse rounded-xl bg-violet-50"></div>
+          <span class="sr-only">Loading banks…</span>
+        </div>
+      } @else if (filteredBanks().length === 0) {
+        <p class="mt-5 rounded-xl bg-violet-50 px-4 py-6 text-center text-sm text-slate-500">
+          @if (banks().length === 0) { No banks are currently available. } @else { No banks match your search. }
+        </p>
+      } @else {
+        <ul class="mt-5 divide-y divide-violet-100">
+          @for (bank of filteredBanks(); track bank.name + bank.country) {
+            <li class="flex flex-wrap items-center justify-between gap-3 py-4">
+              <div>
+                <p class="font-semibold text-slate-900">{{ bank.name }}</p>
+                <p class="mt-1 text-sm text-slate-500">{{ bank.country }}</p>
+              </div>
+              <button type="button" (click)="connect(bank)" [disabled]="startingConnection()" class="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-violet-500/20 transition-all hover:from-violet-700 hover:to-fuchsia-600 disabled:cursor-not-allowed disabled:opacity-50" [attr.aria-label]="'Connect to ' + bank.name">
+                @if (startingConnection()) { Connecting… } @else { Connect }
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm md:p-8">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-semibold text-slate-900">Your connections</h3>
+          <p class="mt-1 text-sm text-slate-500">Review the status of banks connected to this household.</p>
+        </div>
+        <button type="button" (click)="refreshConnections()" [disabled]="connectionsLoading() || disconnectingId() !== null" class="rounded-xl border border-violet-200 px-4 py-2 text-sm font-semibold text-violet-700 hover:bg-violet-50 disabled:opacity-50" aria-label="Refresh bank connections">
+          Refresh connections
+        </button>
+      </div>
+
+      @if (connectionsLoading()) {
+        <div class="mt-5 space-y-3" role="status" aria-label="Loading bank connections">
+          <div class="h-20 animate-pulse rounded-xl bg-violet-50"></div>
+          <div class="h-20 animate-pulse rounded-xl bg-violet-50"></div>
+          <span class="sr-only">Loading bank connections…</span>
+        </div>
+      } @else if (connections().length === 0) {
+        <p class="mt-5 rounded-xl bg-violet-50 px-4 py-6 text-center text-sm text-slate-500">No bank connections yet.</p>
+      } @else {
+        <ul class="mt-5 divide-y divide-violet-100">
+          @for (connection of connections(); track connection.id) {
+            <li class="flex flex-wrap items-start justify-between gap-4 py-4">
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h4 class="font-semibold text-slate-900">{{ connection.aspsp_name }}</h4>
+                  <span class="rounded-full px-2.5 py-1 text-xs font-semibold" [class]="statusClasses(connection.status)">{{ connection.status }}</span>
+                </div>
+                <p class="mt-1 text-sm text-slate-500">{{ connection.aspsp_country }}</p>
+                @if (connection.session_expires_at) {
+                  <p class="mt-2 text-sm text-slate-500">Session expires {{ formatDate(connection.session_expires_at) }}</p>
+                }
+                @if (connection.failure_summary) {
+                  <p class="mt-2 text-sm text-rose-700">{{ connection.failure_summary }}</p>
+                }
+              </div>
+              @if (connection.status === 'AUTHORIZED' || connection.status === 'FAILED') {
+                <button type="button" (click)="disconnect(connection)" [disabled]="disconnectingId() !== null" class="rounded-xl border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50" [attr.aria-label]="'Disconnect ' + connection.aspsp_name">
+                  @if (disconnectingId() === connection.id) { Disconnecting… } @else { Disconnect }
+                </button>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</div>

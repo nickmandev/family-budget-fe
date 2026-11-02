@@ -170,6 +170,14 @@ export const routes: Routes = [
         title: 'Create household · Family Budget',
       },
       {
+        path: 'households/:id/bank',
+        loadComponent: () =>
+          import('./features/bank/bank-connections-page.component').then(
+            (m) => m.BankConnectionsPageComponent,
+          ),
+        title: 'Bank connections · Family Budget',
+      },
+      {
         path: 'households/:id/settings',
         loadComponent: () =>
           import(
