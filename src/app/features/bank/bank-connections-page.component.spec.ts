@@ -118,7 +118,22 @@ describe('BankConnectionsPageComponent', () => {
     expect(redirector.assign).toHaveBeenCalledOnceWith('https://auth.enablebanking.com/authorize?request=123');
   });
 
-  it('rejects a redirect URL outside the provider origin', async () => {
+  it('redirects to the Enable Banking sandbox authorisation URL', async () => {
+    const fixture = TestBed.createComponent(BankConnectionsPageComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    flushInitialLists();
+    fixture.detectChanges();
+
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('[aria-label="Connect to Example Bank"]')!.click();
+    const request = http.expectOne(`${environment.apiBaseUrl}/households/household-1/bank/connections`);
+    const sandboxUrl = 'https://auth-sandbox.enablebanking.com/ais/start?sessionid=x';
+    request.flush({ data: { connection, redirect_url: sandboxUrl } });
+
+    expect(redirector.assign).toHaveBeenCalledOnceWith(sandboxUrl);
+  });
+
+  it('rejects a redirect URL outside Enable Banking and shows an unsafe-link alert', async () => {
     const fixture = TestBed.createComponent(BankConnectionsPageComponent);
     fixture.detectChanges();
     await fixture.whenStable();

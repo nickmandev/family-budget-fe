@@ -11,6 +11,7 @@ import { selectUser } from '../../state/auth/auth.selectors';
 import * as HouseholdActions from '../../state/household/household.actions';
 import { selectMembers, selectMembersLoading } from '../../state/household/household.selectors';
 import { MembershipRole } from '../../core/api/generated';
+import { isTrustedBankAuthUrl } from './bank-auth-url';
 import { BankRedirector } from './bank-redirector';
 
 @Component({
@@ -125,21 +126,12 @@ export class BankConnectionsPageComponent {
     this.bankApi.createConnection(householdId, bank.name, bank.country).subscribe({
       next: ({ redirect_url: redirectUrl }) => {
         try {
-          const parsedUrl = new URL(redirectUrl);
-          if (
-            parsedUrl.origin !== 'https://auth.enablebanking.com' ||
-            parsedUrl.username !== '' ||
-            parsedUrl.password !== ''
-          ) {
+          if (!isTrustedBankAuthUrl(redirectUrl)) {
             throw new Error('The bank returned an unsafe connection link. Please try again.');
           }
           this.redirector.assign(redirectUrl);
         } catch (error: unknown) {
-          this.error.set(
-            error instanceof TypeError
-              ? 'The bank returned an invalid connection link. Please try again.'
-              : toApiErrorMessage(error),
-          );
+          this.error.set(toApiErrorMessage(error));
         } finally {
           this.startingConnection.set(false);
         }
