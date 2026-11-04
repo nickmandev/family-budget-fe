@@ -4,6 +4,7 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, exhaustMap, map, mergeMap, of, switchMap, tap } from 'rxjs';
 
 import { SuggestionsService } from '../../core/api/generated';
+import type { ConfirmSuggestionRequest } from '../../core/api/generated';
 import { newIdempotencyKey } from '../../core/api/idempotency';
 import { toApiErrorMessage } from '../../core/errors/api-error-message';
 import * as BalanceActions from '../balance/balance.actions';
@@ -80,7 +81,7 @@ export class SuggestionEffects {
           id: householdId,
           suggestionID: suggestionId,
           idempotencyKey: newIdempotencyKey(),
-          confirmSuggestionRequest: request,
+          confirmSuggestionRequest: request as ConfirmSuggestionRequest,
         }).pipe(
           mergeMap(({ data }) => [
             SuggestionActions.confirmSuggestionSuccess({ householdId, suggestion: data.suggestion, operation: data.operation }),

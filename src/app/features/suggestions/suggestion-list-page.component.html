@@ -81,6 +81,14 @@
                   <span>Source: {{ suggestion.source.replaceAll('_', ' ') }}</span>
                   <span>{{ suggestion.confirmation_count }} {{ suggestion.confirmation_count === 1 ? 'confirmation' : 'confirmations' }}</span>
                 </div>
+                @if (isImportedSuggestion(suggestion)) {
+                  <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-600">
+                    @if (provenanceOf(suggestion).effective_date; as effectiveDate) { <span>{{ effectiveDate }}</span> }
+                    @if (provenanceOf(suggestion).account_id; as accountId) { <span>Account: {{ accountName(accountId) ?? 'Account unavailable' }}</span> }
+                    <span class="rounded-full px-2 py-0.5 text-xs font-semibold" [class.bg-rose-100]="provenanceOf(suggestion).direction === 'DEBIT'" [class.text-rose-700]="provenanceOf(suggestion).direction === 'DEBIT'" [class.bg-emerald-100]="provenanceOf(suggestion).direction === 'CREDIT'" [class.text-emerald-700]="provenanceOf(suggestion).direction === 'CREDIT'">{{ provenanceOf(suggestion).direction === 'DEBIT' ? 'DEBIT · out' : 'CREDIT · in' }}</span>
+                    @if (provenanceOf(suggestion).description || provenanceOf(suggestion).reference; as importDescription) { <span>{{ importDescription }}</span> }
+                  </div>
+                }
               </div>
               <p class="shrink-0 text-xl font-bold tabular-nums text-slate-900">{{ suggestion.amount_minor | money: (household()?.currency ?? 'EUR') }}</p>
             </div>
@@ -96,29 +104,33 @@
               <form [formGroup]="actionForm" (ngSubmit)="onActionSubmit()" class="mt-5 space-y-4 rounded-xl border border-violet-100 bg-violet-50/50 p-4 md:p-5" novalidate>
                 @if (action === 'CONFIRM') {
                   <div class="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label for="confirm-kind" class="mb-1.5 block text-sm font-medium text-slate-700">Purchase kind</label>
-                      <select id="confirm-kind" formControlName="purchaseKind" (change)="onPurchaseKindChange()" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
-                        @for (kind of purchaseKinds; track kind) { <option [value]="kind">{{ kind }}</option> }
-                      </select>
-                    </div>
+                    @if (!incomeConfirmation()) {
+                      <div>
+                        <label for="confirm-kind" class="mb-1.5 block text-sm font-medium text-slate-700">Purchase kind</label>
+                        <select id="confirm-kind" formControlName="purchaseKind" (change)="onPurchaseKindChange()" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10">
+                          @for (kind of purchaseKinds; track kind) { <option [value]="kind">{{ kind }}</option> }
+                        </select>
+                      </div>
+                    }
                     <div>
                       <label for="confirm-account" class="mb-1.5 block text-sm font-medium text-slate-700">Account</label>
                       <select id="confirm-account" formControlName="accountId" (change)="onConfirmAccountChange()" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="actionError(actionForm.controls.accountId)">
                         <option value="">Select an account</option>
-                        @for (account of confirmAccounts(); track account.id) { <option [value]="account.id">{{ account.name }} · {{ accountKindLabel(account.kind) }}</option> }
+                        @for (account of (incomeConfirmation() ? activeAccounts() : confirmAccounts()); track account.id) { <option [value]="account.id">{{ account.name }} · {{ accountKindLabel(account.kind) }}</option> }
                       </select>
                        <p class="mt-1 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!actionError(actionForm.controls.accountId)" aria-live="polite">@if (actionError(actionForm.controls.accountId)) { Select an account. }</p>
                     </div>
-                    <div>
-                      <label for="confirm-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Envelope</label>
-                      <select id="confirm-envelope" formControlName="envelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="actionError(actionForm.controls.envelopeId)">
-                        <option value="">Select an envelope</option>
-                        @for (envelope of activeEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
-                      </select>
-                       <p class="mt-1 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!actionError(actionForm.controls.envelopeId)" aria-live="polite">@if (actionError(actionForm.controls.envelopeId)) { Select an envelope. }</p>
-                    </div>
-                    @if (actionForm.controls.purchaseKind.value === 'CARD') {
+                    @if (!incomeConfirmation()) {
+                      <div>
+                        <label for="confirm-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Envelope</label>
+                        <select id="confirm-envelope" formControlName="envelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="actionError(actionForm.controls.envelopeId)">
+                          <option value="">Select an envelope</option>
+                          @for (envelope of activeEnvelopes(); track envelope.id) { <option [value]="envelope.id">{{ envelope.name }}</option> }
+                        </select>
+                         <p class="mt-1 min-h-5 text-sm leading-5 text-rose-600" [class.invisible]="!actionError(actionForm.controls.envelopeId)" aria-live="polite">@if (actionError(actionForm.controls.envelopeId)) { Select an envelope. }</p>
+                      </div>
+                    }
+                    @if (!incomeConfirmation() && actionForm.controls.purchaseKind.value === 'CARD') {
                       <div>
                         <label for="confirm-payment-envelope" class="mb-1.5 block text-sm font-medium text-slate-700">Payment envelope</label>
                         <select id="confirm-payment-envelope" formControlName="paymentEnvelopeId" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" [class.border-rose-300]="actionError(actionForm.controls.paymentEnvelopeId)">
@@ -132,12 +144,18 @@
                       <label for="confirm-date" class="mb-1.5 block text-sm font-medium text-slate-700">Effective date</label>
                       <input id="confirm-date" type="date" formControlName="effectiveDate" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
                     </div>
-                    <div class="sm:col-span-2">
+                    @if (!incomeConfirmation()) {
+                      <div class="sm:col-span-2">
                       <label for="confirm-reason" class="mb-1.5 block text-sm font-medium text-slate-700">Reason (optional)</label>
                       <input id="confirm-reason" type="text" formControlName="reason" maxlength="500" placeholder="Additional context" class="w-full rounded-xl border border-violet-200 bg-white px-4 py-3 outline-none focus:border-fuchsia-500 focus:ring-4 focus:ring-fuchsia-500/10" />
-                    </div>
+                      </div>
+                    }
                   </div>
-                  <p class="text-xs text-slate-500">Confirming records this already-completed purchase as a committed transaction and updates balances.</p>
+                  @if (incomeConfirmation()) {
+                    <p class="text-xs text-slate-500">Imported credit — recorded as income to the selected account.</p>
+                  } @else {
+                    <p class="text-xs text-slate-500">Confirming records this already-completed purchase as a committed transaction and updates balances.</p>
+                  }
                 } @else if (action === 'EDIT') {
                   <div class="grid gap-4 sm:grid-cols-2">
                     <div>
