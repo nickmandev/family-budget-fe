@@ -178,6 +178,14 @@ export const routes: Routes = [
         title: 'Household settings · Family Budget',
       },
       {
+        path: 'households/:id/imports',
+        loadComponent: () =>
+          import('./features/imports/bank-import-page.component').then(
+            (m) => m.BankImportPageComponent,
+          ),
+        title: 'Import bank statement · Family Budget',
+      },
+      {
         path: 'households',
         loadComponent: () =>
           import(

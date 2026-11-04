@@ -13,6 +13,7 @@ import {
   TransactionSource,
 } from '../../core/api/generated';
 import type { Suggestion } from '../../core/api/generated';
+import { isImportedSuggestion, isIncomeSuggestion, provenanceOf } from '../../core/api/suggestion-provenance';
 import { MoneyInputDirective } from '../../shared/directives/money-input.directive';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { todayInTimeZone } from '../../shared/utils/date';
@@ -82,6 +83,10 @@ export class SuggestionListPageComponent {
   protected readonly activeSuggestion = computed(() =>
     this.suggestions().find((suggestion) => suggestion.id === this.activeSuggestionId()) ?? null,
   );
+  protected readonly incomeConfirmation = computed(() => {
+    const suggestion = this.activeSuggestion();
+    return this.activeAction() === 'CONFIRM' && suggestion !== null && isIncomeSuggestion(suggestion);
+  });
 
   protected readonly createForm = this.formBuilder.group({
     source: this.formBuilder.nonNullable.control<TransactionSource>(TransactionSource.MANUAL, Validators.required),
@@ -155,15 +160,24 @@ export class SuggestionListPageComponent {
     this.createOpen.set(false);
     this.activeSuggestionId.set(suggestion.id);
     this.activeAction.set(action);
+    const provenance = provenanceOf(suggestion);
+    const isIncome = action === 'CONFIRM' && isIncomeSuggestion(suggestion);
+    const accountOptions = isIncome ? this.activeAccounts() : this.confirmAccounts(PurchaseKind.DEBIT);
+    const prefilledAccountId = isImportedSuggestion(suggestion) &&
+      accountOptions.some((account) => account.id === provenance.account_id)
+      ? provenance.account_id ?? ''
+      : '';
     this.actionForm.reset({
       amountMinor: action === 'EDIT' ? suggestion.amount_minor : null,
       merchant: action === 'EDIT' ? suggestion.merchant : '',
       reason: '',
       purchaseKind: PurchaseKind.DEBIT,
-      accountId: '',
+      accountId: action === 'CONFIRM' ? prefilledAccountId : '',
       envelopeId: '',
       paymentEnvelopeId: '',
-      effectiveDate: todayInTimeZone(this.household()?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone),
+      effectiveDate: action === 'CONFIRM' && provenance.effective_date
+        ? provenance.effective_date
+        : todayInTimeZone(this.household()?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone),
       planKind: PlanKind.PURCHASE,
       targetEnvelopeId: '',
       targetAccountId: '',
@@ -172,10 +186,10 @@ export class SuggestionListPageComponent {
     this.actionForm.controls.merchant.setValidators(action === 'EDIT' ? [Validators.maxLength(200)] : []);
     this.actionForm.controls.reason.setValidators(action === 'CANCEL' ? [Validators.required, Validators.maxLength(500)] : []);
     this.actionForm.controls.accountId.setValidators(action === 'CONFIRM' ? [Validators.required] : []);
-    this.actionForm.controls.envelopeId.setValidators(action === 'CONFIRM' ? [Validators.required] : []);
+    this.actionForm.controls.envelopeId.setValidators(action === 'CONFIRM' && !isIncome ? [Validators.required] : []);
     this.actionForm.controls.effectiveDate.setValidators(action === 'CONFIRM' ? [Validators.required] : []);
     this.actionForm.controls.paymentEnvelopeId.setValidators(
-      action === 'CONFIRM' && this.actionForm.controls.purchaseKind.value === PurchaseKind.CARD
+      action === 'CONFIRM' && !isIncome && this.actionForm.controls.purchaseKind.value === PurchaseKind.CARD
         ? [Validators.required]
         : [],
     );
@@ -218,8 +232,8 @@ export class SuggestionListPageComponent {
     this.updateConversionAccountValidator();
   }
 
-  protected confirmAccounts() {
-    const isCard = this.actionForm.controls.purchaseKind.value === PurchaseKind.CARD;
+  protected confirmAccounts(purchaseKind = this.actionForm.controls.purchaseKind.value) {
+    const isCard = purchaseKind === PurchaseKind.CARD;
     return this.activeAccounts().filter((account) =>
       isCard
         ? account.kind === AccountKind.CREDIT_CARD_LIABILITY
@@ -266,10 +280,16 @@ export class SuggestionListPageComponent {
         request: { reason: values.reason.trim() },
       }));
     } else if (action === 'CONFIRM') {
+      const isIncome = isIncomeSuggestion(suggestion);
       this.store.dispatch(SuggestionActions.confirmSuggestion({
         householdId,
         suggestionId: suggestion.id,
-        request: {
+        request: isIncome ? {
+          kind: 'income',
+          account_id: values.accountId,
+          effective_date: values.effectiveDate,
+        } : {
+          kind: 'purchase',
           purchase_kind: values.purchaseKind,
           account_id: values.accountId,
           envelope_id: values.envelopeId,
@@ -312,6 +332,18 @@ export class SuggestionListPageComponent {
 
   protected accountKindLabel(kind: AccountKind): string {
     return kind === AccountKind.CREDIT_CARD_LIABILITY ? 'Credit card' : 'Account';
+  }
+
+  protected isImportedSuggestion(suggestion: Suggestion): boolean {
+    return isImportedSuggestion(suggestion);
+  }
+
+  protected provenanceOf(suggestion: Suggestion) {
+    return provenanceOf(suggestion);
+  }
+
+  protected accountName(accountId: string): string | null {
+    return this.accounts().find((account) => account.id === accountId)?.name ?? null;
   }
 
   private updatePaymentEnvelope(): void {

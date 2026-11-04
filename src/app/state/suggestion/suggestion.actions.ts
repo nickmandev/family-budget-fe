@@ -7,9 +7,18 @@ import type {
   CreateSuggestionRequest,
   EditSuggestionRequest,
   Plan,
+  PurchaseKind,
   Suggestion,
   Transaction,
 } from '../../core/api/generated';
+
+export type ConfirmSuggestionPayload =
+  | (Omit<ConfirmSuggestionRequest, 'purchase_kind' | 'envelope_id'> & {
+      kind?: 'purchase';
+      purchase_kind: PurchaseKind;
+      envelope_id: string;
+    })
+  | Pick<ConfirmSuggestionRequest, 'account_id' | 'effective_date'> & { kind: 'income' };
 
 export const loadSuggestions = createAction('[Suggestion] Load Suggestions', props<{ householdId: string }>());
 export const loadSuggestionsSuccess = createAction('[Suggestion] Load Suggestions Success', props<{ suggestions: Suggestion[] }>());
@@ -27,7 +36,7 @@ export const cancelSuggestion = createAction('[Suggestion] Cancel Suggestion', p
 export const cancelSuggestionSuccess = createAction('[Suggestion] Cancel Suggestion Success', props<{ householdId: string; suggestion: Suggestion }>());
 export const cancelSuggestionFailure = createAction('[Suggestion] Cancel Suggestion Failure', props<{ error: string }>());
 
-export const confirmSuggestion = createAction('[Suggestion] Confirm Suggestion', props<{ householdId: string; suggestionId: string; request: ConfirmSuggestionRequest }>());
+export const confirmSuggestion = createAction('[Suggestion] Confirm Suggestion', props<{ householdId: string; suggestionId: string; request: ConfirmSuggestionPayload }>());
 export const confirmSuggestionSuccess = createAction('[Suggestion] Confirm Suggestion Success', props<{ householdId: string; suggestion: Suggestion; operation: Transaction }>());
 export const confirmSuggestionFailure = createAction('[Suggestion] Confirm Suggestion Failure', props<{ error: string }>());
 
