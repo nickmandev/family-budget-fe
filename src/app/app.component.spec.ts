@@ -18,10 +18,10 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'family-budget-fe' title`, () => {
+  it(`should have the 'Pocketful' title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('family-budget-fe');
+    expect(app.title).toEqual('Pocketful');
   });
 
   it('should render a router outlet', () => {

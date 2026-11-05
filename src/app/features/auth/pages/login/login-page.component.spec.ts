@@ -41,6 +41,15 @@ describe('LoginPageComponent', () => {
     expect(dispatch).not.toHaveBeenCalled();
   });
 
+  it('renders the Pocketful wordmark in the hero', () => {
+    const fixture = TestBed.createComponent(LoginPageComponent);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe('Pocketful');
+    expect(element.textContent).toContain('Pocketful');
+  });
+
   it('validates malformed email and passwords shorter than eight characters', () => {
     const fixture = TestBed.createComponent(LoginPageComponent);
     fixture.detectChanges();

@@ -12,7 +12,7 @@ export const routes: Routes = [
         (m) => m.LoginPageComponent,
       ),
     canActivate: [publicGuard],
-    title: 'Sign in · Family Budget',
+    title: 'Sign in · Pocketful',
   },
   {
     path: 'register',
@@ -21,7 +21,7 @@ export const routes: Routes = [
         (m) => m.RegisterPageComponent,
       ),
     canActivate: [publicGuard],
-    title: 'Create account · Family Budget',
+    title: 'Create account · Pocketful',
   },
   {
     path: '',
@@ -39,7 +39,7 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard-page.component').then(
             (m) => m.DashboardPageComponent,
           ),
-        title: 'Dashboard · Family Budget',
+        title: 'Dashboard · Pocketful',
       },
       {
         path: 'accounts',
@@ -47,7 +47,7 @@ export const routes: Routes = [
           import(
             './features/accounts/pages/account-list/account-list-page.component'
           ).then((m) => m.AccountListPageComponent),
-        title: 'Accounts · Family Budget',
+        title: 'Accounts · Pocketful',
       },
       {
         path: 'envelopes',
@@ -55,7 +55,7 @@ export const routes: Routes = [
           import(
             './features/envelopes/pages/envelope-list/envelope-list-page.component'
           ).then((m) => m.EnvelopeListPageComponent),
-        title: 'Envelopes · Family Budget',
+        title: 'Envelopes · Pocketful',
       },
       {
         path: 'envelopes/new',
@@ -63,7 +63,7 @@ export const routes: Routes = [
           import(
             './features/envelopes/pages/envelope-form/envelope-form-page.component'
           ).then((m) => m.EnvelopeFormPageComponent),
-        title: 'Add envelope · Family Budget',
+        title: 'Add envelope · Pocketful',
       },
       {
         path: 'envelopes/:id/edit',
@@ -71,7 +71,7 @@ export const routes: Routes = [
           import(
             './features/envelopes/pages/envelope-edit/envelope-edit-page.component'
           ).then((m) => m.EnvelopeEditPageComponent),
-        title: 'Edit envelope · Family Budget',
+        title: 'Edit envelope · Pocketful',
       },
       {
         path: 'envelopes/allocate',
@@ -79,7 +79,7 @@ export const routes: Routes = [
           import(
             './features/envelopes/pages/allocate-funds/allocate-funds-page.component'
           ).then((m) => m.AllocateFundsPageComponent),
-        title: 'Allocate funds · Family Budget',
+        title: 'Allocate funds · Pocketful',
       },
       {
         path: 'envelopes/reallocate',
@@ -87,7 +87,7 @@ export const routes: Routes = [
           import(
             './features/envelopes/pages/reallocate-funds/reallocate-funds-page.component'
           ).then((m) => m.ReallocateFundsPageComponent),
-        title: 'Reallocate funds · Family Budget',
+        title: 'Reallocate funds · Pocketful',
       },
       {
         path: 'transactions/new',
@@ -95,7 +95,7 @@ export const routes: Routes = [
           import('./features/transactions/transaction-record-page.component').then(
             (m) => m.TransactionRecordPageComponent,
           ),
-        title: 'Record transaction · Family Budget',
+        title: 'Record transaction · Pocketful',
       },
       {
         path: 'transactions',
@@ -103,7 +103,7 @@ export const routes: Routes = [
           import('./features/transactions/transaction-list-page.component').then(
             (m) => m.TransactionListPageComponent,
           ),
-        title: 'Transactions · Family Budget',
+        title: 'Transactions · Pocketful',
       },
       {
         path: 'suggestions',
@@ -111,7 +111,7 @@ export const routes: Routes = [
           import('./features/suggestions/suggestion-list-page.component').then(
             (m) => m.SuggestionListPageComponent,
           ),
-        title: 'Suggestions · Family Budget',
+        title: 'Suggestions · Pocketful',
       },
       {
         path: 'plans/new',
@@ -119,7 +119,7 @@ export const routes: Routes = [
           import('./features/plans/plan-form-page.component').then(
             (m) => m.PlanFormPageComponent,
           ),
-        title: 'New plan · Family Budget',
+        title: 'New plan · Pocketful',
       },
       {
         path: 'plans/:id',
@@ -127,7 +127,7 @@ export const routes: Routes = [
           import('./features/plans/plan-detail-page.component').then(
             (m) => m.PlanDetailPageComponent,
           ),
-        title: 'Plan · Family Budget',
+        title: 'Plan · Pocketful',
       },
       {
         path: 'plans',
@@ -135,7 +135,7 @@ export const routes: Routes = [
           import('./features/plans/plan-list-page.component').then(
             (m) => m.PlanListPageComponent,
           ),
-        title: 'Plans · Family Budget',
+        title: 'Plans · Pocketful',
       },
       {
         path: 'accounts/new',
@@ -143,7 +143,7 @@ export const routes: Routes = [
           import(
             './features/accounts/pages/account-form/account-form-page.component'
           ).then((m) => m.AccountFormPageComponent),
-        title: 'Add account · Family Budget',
+        title: 'Add account · Pocketful',
       },
       {
         path: 'accounts/:id',
@@ -151,7 +151,7 @@ export const routes: Routes = [
           import(
             './features/accounts/pages/account-detail/account-detail-page.component'
           ).then((m) => m.AccountDetailPageComponent),
-        title: 'Account · Family Budget',
+        title: 'Account · Pocketful',
       },
       {
         path: 'accounts/:id/edit',
@@ -159,7 +159,7 @@ export const routes: Routes = [
           import(
             './features/accounts/pages/account-edit/account-edit-page.component'
           ).then((m) => m.AccountEditPageComponent),
-        title: 'Edit account · Family Budget',
+        title: 'Edit account · Pocketful',
       },
       {
         path: 'households/new',
@@ -167,7 +167,7 @@ export const routes: Routes = [
           import(
             './features/households/pages/household-form/household-form-page.component'
           ).then((m) => m.HouseholdFormPageComponent),
-        title: 'Create household · Family Budget',
+        title: 'Create household · Pocketful',
       },
       {
         path: 'households/:id/settings',
@@ -175,7 +175,7 @@ export const routes: Routes = [
           import(
             './features/households/pages/household-settings/household-settings-page.component'
           ).then((m) => m.HouseholdSettingsPageComponent),
-        title: 'Household settings · Family Budget',
+        title: 'Household settings · Pocketful',
       },
       {
         path: 'households/:id/imports',
@@ -191,7 +191,7 @@ export const routes: Routes = [
           import(
             './features/households/pages/household-list/household-list-page.component'
           ).then((m) => m.HouseholdListPageComponent),
-        title: 'Households · Family Budget',
+        title: 'Households · Pocketful',
       },
     ],
   },

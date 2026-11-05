@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 260" role="img" aria-label="Pocketful logo" >
+  <title>Pocketful</title>
+  <g transform="translate(0 0) scale(0.72)">
+<g>
+  <!-- Rear pocket -->
+  <path d="M72 18H184C198 18 208 28 208 42V83L128 126L48 83V42C48 28 58 18 72 18Z" fill="#BD4FEF"/>
+  <!-- Middle pocket -->
+  <path d="M62 86H194C208 86 218 96 218 110V151L128 194L38 151V110C38 96 48 86 62 86Z" fill="#A347EE"/>
+  <!-- Front pocket -->
+  <path d="M48 157H208C222 157 232 167 232 181V207C232 221 222 231 208 231H48C34 231 24 221 24 207V181C24 167 34 157 48 157Z" fill="#2E1065"/>
+  <!-- Fold line on the front pocket -->
+  <path d="M25 180L128 226L231 180" fill="none" stroke="#F5F3FF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</g>
+    <text x="128" y="239" text-anchor="middle" fill="#2E1065"
+      font-family="Nunito Sans, Inter, Avenir, Arial, sans-serif"
+      font-size="38" font-weight="750" letter-spacing="-1.2">Pocketful</text>
+</svg>
