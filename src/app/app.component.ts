@@ -23,7 +23,7 @@ export class AppComponent {
   private readonly store = inject(Store);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly title = 'family-budget-fe';
+  readonly title = 'Pocketful';
 
   constructor() {
     this.router.events
