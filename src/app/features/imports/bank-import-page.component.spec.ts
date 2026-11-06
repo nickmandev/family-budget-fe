@@ -55,6 +55,7 @@ describe('BankImportPageComponent', () => {
     opening_balance_minor: 10_000,
     closing_balance_minor: 8_500,
     skipped_rows: 1,
+    skipped: [{ ...failure, row_index: 3, reason: 'zero-amount row' }],
     entries: [
       {
         external_id: 'entry-1',
@@ -143,8 +144,9 @@ describe('BankImportPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Groceries');
     expect(fixture.nativeElement.textContent).toContain('REF-1');
     expect(fixture.nativeElement.textContent).toContain('2 entries');
-    expect(fixture.nativeElement.textContent).toContain('Skipped rows: 1');
-    expect(fixture.nativeElement.textContent).toContain('Opening/closing balance, period turnover, no-direction and zero-amount rows are intentionally not money movements.');
+    expect(fixture.nativeElement.textContent).toContain('Skipped (1)');
+    expect(fixture.nativeElement.textContent).toContain('Row 3 — zero-amount row');
+    expect(fixture.nativeElement.textContent).toContain('These balance and turnover rows, rows without a debit/credit indicator, and zero-amount rows are non-movements, never money movements, so there is nothing to recreate.');
     expect(fixture.nativeElement.textContent).toContain('Failures (1)');
     expect(fixture.nativeElement.textContent).toContain('These rows were not imported. Recreate any real movement via Suggestions → New using the details shown here.');
     const failureCells = fixture.nativeElement.querySelectorAll('table')[1].querySelectorAll('tbody td') as NodeListOf<HTMLTableCellElement>;
@@ -160,8 +162,7 @@ describe('BankImportPageComponent', () => {
     selectAccount(fixture);
     fixture.nativeElement.querySelector('button').click();
     fixture.detectChanges();
-    const buttons = fixture.nativeElement.querySelectorAll('button');
-    buttons[1].click();
+    findButton(fixture, 'Import').click();
     fixture.detectChanges();
 
     expect(importApi.commit).toHaveBeenCalledWith('home-1', 'account-1', jasmine.any(File));
@@ -187,13 +188,47 @@ describe('BankImportPageComponent', () => {
     fixture.nativeElement.querySelector('button').click();
     fixture.detectChanges();
     selectAccount(fixture);
-    fixture.nativeElement.querySelectorAll('button')[1].click();
+    findButton(fixture, 'Import').click();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Skipped rows: 1');
-    expect(fixture.nativeElement.textContent).toContain('Opening/closing balance, period turnover, no-direction and zero-amount rows are intentionally not money movements.');
+    expect(fixture.nativeElement.textContent).toContain('Skipped (1)');
+    expect(fixture.nativeElement.textContent).toContain('These balance and turnover rows, rows without a debit/credit indicator, and zero-amount rows are non-movements, never money movements, so there is nothing to recreate.');
     expect(fixture.nativeElement.textContent).not.toContain('Failures (');
     expect(fixture.nativeElement.querySelectorAll('[role="alert"]').length).toBe(0);
+  });
+
+  it('collapses skipped-row details by default when there are more than three', () => {
+    importApi.preview.and.returnValue(of({
+      ...preview,
+      skipped_rows: 4,
+      skipped: [
+        { ...preview.skipped[0], row_index: 0, reason: 'opening balance row' },
+        { ...preview.skipped[0], row_index: 1, reason: 'closing balance row' },
+        { ...preview.skipped[0], row_index: 2, reason: 'debit turnover row' },
+        { ...preview.skipped[0], row_index: 3, reason: 'credit turnover row' },
+      ],
+    }));
+    const fixture = TestBed.createComponent(BankImportPageComponent);
+    fixture.detectChanges();
+    selectFile(fixture);
+    fixture.nativeElement.querySelector('button').click();
+    fixture.detectChanges();
+
+    const toggle = findButton(fixture, 'Skipped (4)');
+    const list = fixture.nativeElement.querySelector('#skipped-rows-list') as HTMLUListElement;
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(list.hidden).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('Skipped (4)');
+    expect(fixture.nativeElement.textContent).toContain('Row 0 — opening balance row');
+    expect(fixture.nativeElement.textContent).toContain('Row 1 — closing balance row');
+    expect(fixture.nativeElement.textContent).toContain('Row 2 — debit turnover row');
+    expect(fixture.nativeElement.textContent).toContain('These balance and turnover rows, rows without a debit/credit indicator, and zero-amount rows are non-movements, never money movements, so there is nothing to recreate.');
+
+    toggle.click();
+    fixture.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(list.hidden).toBeFalse();
+    expect(fixture.nativeElement.textContent).toContain('Row 3 — credit turnover row');
   });
 
   it('shows an alert for API errors', () => {
@@ -236,6 +271,16 @@ describe('BankImportPageComponent', () => {
     expect(importButton.disabled).toBeFalse();
   });
 });
+
+function findButton(
+  fixture: ReturnType<typeof TestBed.createComponent<BankImportPageComponent>>,
+  text: string,
+): HTMLButtonElement {
+  const button = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+    .find((item) => item.textContent?.trim() === text);
+  if (!button) throw new Error(`Button not found: ${text}`);
+  return button;
+}
 
 function selectFile(fixture: ReturnType<typeof TestBed.createComponent<BankImportPageComponent>>): void {
   const input = fixture.nativeElement.querySelector('#statement-file') as HTMLInputElement;

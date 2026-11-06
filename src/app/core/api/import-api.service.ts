@@ -28,6 +28,7 @@ export interface StatementPreview {
   opening_balance_minor: number | null;
   closing_balance_minor: number | null;
   skipped_rows: number;
+  skipped: BankImportFailure[];
   entries: StatementEntry[];
   failures: BankImportFailure[];
 }

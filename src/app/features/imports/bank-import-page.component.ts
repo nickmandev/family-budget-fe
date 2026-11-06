@@ -42,6 +42,7 @@ export class BankImportPageComponent {
   protected readonly selectedAccountId = signal('');
   protected readonly selectedFile = signal<File | null>(null);
   protected readonly preview = signal<StatementPreview | null>(null);
+  protected readonly skippedExpanded = signal(false);
   protected readonly result = signal<BankImportCommit | null>(null);
   protected readonly history = signal<BankImport[]>([]);
   protected readonly previewLoading = signal(false);
@@ -65,6 +66,7 @@ export class BankImportPageComponent {
     const input = event.target as HTMLInputElement;
     this.selectedFile.set(input.files?.[0] ?? null);
     this.preview.set(null);
+    this.skippedExpanded.set(false);
     this.result.set(null);
     this.error.set(null);
   }
@@ -82,7 +84,10 @@ export class BankImportPageComponent {
     this.error.set(null);
     this.result.set(null);
     this.importApi.preview(householdId, file).subscribe({
-      next: (preview) => this.preview.set(preview),
+      next: (preview) => {
+        this.preview.set(preview);
+        this.skippedExpanded.set(preview.skipped.length <= 3);
+      },
       error: (error: unknown) => {
         this.error.set(toApiErrorMessage(error));
         this.previewLoading.set(false);
@@ -124,6 +129,10 @@ export class BankImportPageComponent {
   protected formatTimestamp(value: string): string {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat().format(date);
+  }
+
+  protected toggleSkipped(): void {
+    this.skippedExpanded.update((expanded) => !expanded);
   }
 
   private refreshHistory(householdId: string): void {

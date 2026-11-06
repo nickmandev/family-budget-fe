@@ -19,6 +19,7 @@ describe('ImportApiService', () => {
     opening_balance_minor: null,
     closing_balance_minor: null,
     skipped_rows: 0,
+    skipped: [],
     entries: [],
     failures: [{
       row_index: 2,
