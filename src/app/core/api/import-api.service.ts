@@ -29,6 +29,7 @@ export interface StatementPreview {
   closing_balance_minor: number | null;
   skipped_rows: number;
   entries: StatementEntry[];
+  failures: BankImportFailure[];
 }
 
 export interface BankImport {
@@ -50,6 +51,16 @@ export interface BankImport {
 export interface BankImportFailure {
   row_index: number;
   reason: string;
+  external_id: string | null;
+  booked_date: string | null;
+  value_date: string | null;
+  direction: 'DEBIT' | 'CREDIT' | null;
+  amount_minor: number | null;
+  currency: string | null;
+  merchant: string | null;
+  description: string | null;
+  reference: string | null;
+  transaction_code: string | null;
 }
 
 export interface BankImportCommit {

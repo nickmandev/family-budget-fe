@@ -7,7 +7,7 @@ import { of, throwError } from 'rxjs';
 import { LifecycleStatus } from '../../core/api/generated';
 import type { Account, Household } from '../../core/api/generated';
 import { ImportApiService } from '../../core/api/import-api.service';
-import type { BankImport, StatementPreview } from '../../core/api/import-api.service';
+import type { BankImport, BankImportFailure, StatementPreview } from '../../core/api/import-api.service';
 import { selectAllAccounts } from '../../state/account/account.selectors';
 import { selectAllHouseholds } from '../../state/household/household.selectors';
 import { BankImportPageComponent } from './bank-import-page.component';
@@ -31,6 +31,20 @@ describe('BankImportPageComponent', () => {
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',
   };
+  const failure: BankImportFailure = {
+    row_index: 4,
+    reason: 'Invalid transaction',
+    external_id: null,
+    booked_date: '2026-01-04',
+    value_date: null,
+    direction: null,
+    amount_minor: null,
+    currency: null,
+    merchant: null,
+    description: 'Unrecognized movement',
+    reference: null,
+    transaction_code: null,
+  };
   const preview: StatementPreview = {
     bank: 'fibank',
     format: 'xml',
@@ -41,19 +55,35 @@ describe('BankImportPageComponent', () => {
     opening_balance_minor: 10_000,
     closing_balance_minor: 8_500,
     skipped_rows: 1,
-    entries: [{
-      external_id: 'entry-1',
-      booked_date: '2026-01-02',
-      value_date: '2026-01-02',
-      direction: 'DEBIT',
-      amount_minor: 1_500,
-      currency: 'EUR',
-      merchant: 'Market',
-      description: 'Groceries',
-      reference: 'REF-1',
-      transaction_code: 'POS',
-      balance_after_minor: 8_500,
-    }],
+    entries: [
+      {
+        external_id: 'entry-1',
+        booked_date: '2026-01-02',
+        value_date: '2026-01-02',
+        direction: 'DEBIT',
+        amount_minor: 1_500,
+        currency: 'EUR',
+        merchant: 'Market',
+        description: 'Groceries',
+        reference: 'REF-1',
+        transaction_code: 'POS',
+        balance_after_minor: 8_500,
+      },
+      {
+        external_id: 'entry-2',
+        booked_date: '2026-01-03',
+        value_date: '2026-01-03',
+        direction: 'CREDIT',
+        amount_minor: 5_000,
+        currency: 'EUR',
+        merchant: 'Salary',
+        description: 'Income',
+        reference: 'REF-2',
+        transaction_code: 'TRF',
+        balance_after_minor: 13_500,
+      },
+    ],
+    failures: [failure],
   };
   const batch: BankImport = {
     id: 'batch-1',
@@ -78,7 +108,7 @@ describe('BankImportPageComponent', () => {
     importApi.preview.and.returnValue(of(preview));
     importApi.commit.and.returnValue(of({
       batch: { ...batch, rows_duplicate: 2, rows_failed: 1 },
-      failures: [{ row_index: 4, reason: 'Invalid transaction' }],
+      failures: [failure],
     }));
 
     await TestBed.configureTestingModule({
@@ -99,7 +129,7 @@ describe('BankImportPageComponent', () => {
 
   afterEach(() => TestBed.inject(MockStore).resetSelectors());
 
-  it('previews a selected file and renders statement entries', () => {
+  it('previews entries and shows skipped and failed statement rows', () => {
     const fixture = TestBed.createComponent(BankImportPageComponent);
     fixture.detectChanges();
     selectFile(fixture);
@@ -112,6 +142,15 @@ describe('BankImportPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Market');
     expect(fixture.nativeElement.textContent).toContain('Groceries');
     expect(fixture.nativeElement.textContent).toContain('REF-1');
+    expect(fixture.nativeElement.textContent).toContain('2 entries');
+    expect(fixture.nativeElement.textContent).toContain('Skipped rows: 1');
+    expect(fixture.nativeElement.textContent).toContain('Opening/closing balance, period turnover, no-direction and zero-amount rows are intentionally not money movements.');
+    expect(fixture.nativeElement.textContent).toContain('Failures (1)');
+    expect(fixture.nativeElement.textContent).toContain('These rows were not imported. Recreate any real movement via Suggestions → New using the details shown here.');
+    const failureCells = fixture.nativeElement.querySelectorAll('table')[1].querySelectorAll('tbody td') as NodeListOf<HTMLTableCellElement>;
+    expect(Array.from(failureCells).map((cell) => cell.textContent?.trim())).toEqual([
+      '4', '2026-01-04', 'Unknown', '—', 'Unrecognized movement', 'Invalid transaction',
+    ]);
   });
 
   it('commits the selected file and account, displays counts, and refreshes history', () => {
@@ -131,7 +170,30 @@ describe('BankImportPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Duplicates2');
     expect(fixture.nativeElement.textContent).toContain('Failed1');
     expect(fixture.nativeElement.textContent).toContain('Invalid transaction');
+    const tables = fixture.nativeElement.querySelectorAll('table');
+    const resultCells = tables[2].querySelectorAll('tbody td') as NodeListOf<HTMLTableCellElement>;
+    expect(Array.from(resultCells).map((cell) => cell.textContent?.trim())).toEqual([
+      '4', '2026-01-04', 'Unknown', '—', 'Unrecognized movement', 'Invalid transaction',
+    ]);
     expect(importApi.list).toHaveBeenCalledTimes(2);
+  });
+
+  it('omits failure sections when preview and commit have no failures', () => {
+    importApi.preview.and.returnValue(of({ ...preview, failures: [] }));
+    importApi.commit.and.returnValue(of({ batch, failures: [] }));
+    const fixture = TestBed.createComponent(BankImportPageComponent);
+    fixture.detectChanges();
+    selectFile(fixture);
+    fixture.nativeElement.querySelector('button').click();
+    fixture.detectChanges();
+    selectAccount(fixture);
+    fixture.nativeElement.querySelectorAll('button')[1].click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Skipped rows: 1');
+    expect(fixture.nativeElement.textContent).toContain('Opening/closing balance, period turnover, no-direction and zero-amount rows are intentionally not money movements.');
+    expect(fixture.nativeElement.textContent).not.toContain('Failures (');
+    expect(fixture.nativeElement.querySelectorAll('[role="alert"]').length).toBe(0);
   });
 
   it('shows an alert for API errors', () => {
