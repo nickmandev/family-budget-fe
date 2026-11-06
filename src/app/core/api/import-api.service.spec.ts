@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { environment } from '../../../environments/environment';
 import { ImportApiService } from './import-api.service';
-import type { BankImport, StatementPreview } from './import-api.service';
+import type { BankImport, BankImportFailure, StatementPreview } from './import-api.service';
 
 describe('ImportApiService', () => {
   let service: ImportApiService;
@@ -20,6 +20,34 @@ describe('ImportApiService', () => {
     closing_balance_minor: null,
     skipped_rows: 0,
     entries: [],
+    failures: [{
+      row_index: 2,
+      reason: 'Invalid transaction',
+      external_id: null,
+      booked_date: null,
+      value_date: null,
+      direction: null,
+      amount_minor: null,
+      currency: null,
+      merchant: null,
+      description: null,
+      reference: null,
+      transaction_code: null,
+    }],
+  };
+  const failure: BankImportFailure = {
+    row_index: 4,
+    reason: 'Invalid transaction',
+    external_id: 'external-4',
+    booked_date: '2026-01-04',
+    value_date: null,
+    direction: 'DEBIT',
+    amount_minor: 250,
+    currency: 'EUR',
+    merchant: 'Market',
+    description: null,
+    reference: 'REF-4',
+    transaction_code: null,
   };
   const batch: BankImport = {
     id: 'batch-1',
@@ -62,7 +90,7 @@ describe('ImportApiService', () => {
     expect(result).toEqual(preview);
   });
 
-  it('commits a file and account using multipart form data and unwraps data', () => {
+  it('commits a file and account using multipart form data and passes through detailed failures', () => {
     const file = new File(['statement'], 'statement.xml');
     let result: unknown;
 
@@ -74,8 +102,8 @@ describe('ImportApiService', () => {
     expect(body.get('file')).toEqual(file);
     expect(body.get('account_id')).toBe('account-1');
     expect(request.request.headers.has('Content-Type')).toBeFalse();
-    request.flush({ data: { batch, failures: [] } });
-    expect(result).toEqual({ batch, failures: [] });
+    request.flush({ data: { batch, failures: [failure] } });
+    expect(result).toEqual({ batch, failures: [failure] });
   });
 
   it('lists imports and unwraps items', () => {

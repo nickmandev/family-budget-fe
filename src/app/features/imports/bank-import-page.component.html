@@ -75,6 +75,35 @@
           </tbody>
         </table>
       </div>
+      <div class="space-y-1 text-sm">
+        <p class="font-semibold text-slate-700">Skipped rows: {{ statement.skipped_rows }}</p>
+        <p class="text-slate-500">Opening/closing balance, period turnover, no-direction and zero-amount rows are intentionally not money movements.</p>
+      </div>
+      @if (statement.failures.length > 0) {
+        <div role="alert" class="space-y-3 rounded-xl border border-rose-100 bg-rose-50/50 p-4">
+          <div>
+            <h4 class="font-semibold text-rose-800">Failures ({{ statement.failures.length }})</h4>
+            <p class="mt-1 text-sm text-rose-700">These rows were not imported. Recreate any real movement via Suggestions → New using the details shown here.</p>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-rose-100 bg-white">
+            <table class="w-full min-w-[850px] text-left text-sm">
+              <thead class="border-b border-rose-100 bg-rose-50 text-xs uppercase tracking-wide text-slate-500"><tr><th scope="col" class="px-3 py-3 font-medium">Row</th><th scope="col" class="px-3 py-3 font-medium">Date</th><th scope="col" class="px-3 py-3 font-medium">Direction</th><th scope="col" class="px-3 py-3 font-medium">Amount</th><th scope="col" class="px-3 py-3 font-medium">Detail</th><th scope="col" class="px-3 py-3 font-medium">Reason</th></tr></thead>
+              <tbody class="divide-y divide-rose-50">
+                @for (failure of statement.failures; track failure.row_index) {
+                  <tr>
+                    <td class="px-3 py-3 text-slate-700">{{ failure.row_index }}</td>
+                    <td class="whitespace-nowrap px-3 py-3 text-slate-600">{{ formatDate(failure.value_date ?? failure.booked_date) }}</td>
+                    <td class="px-3 py-3"><span class="rounded-full px-2.5 py-1 text-xs font-semibold" [class.bg-rose-100]="failure.direction === 'DEBIT'" [class.text-rose-700]="failure.direction === 'DEBIT'" [class.bg-emerald-100]="failure.direction === 'CREDIT'" [class.text-emerald-700]="failure.direction === 'CREDIT'" [class.bg-slate-100]="!failure.direction" [class.text-slate-600]="!failure.direction">{{ failure.direction ?? 'Unknown' }}</span></td>
+                    <td class="whitespace-nowrap px-3 py-3 font-semibold tabular-nums text-slate-700">{{ failure.amount_minor | money: currency() }}</td>
+                    <td class="px-3 py-3 text-slate-700">{{ failure.merchant || failure.description || failure.reference || failure.external_id || '—' }}</td>
+                    <td class="px-3 py-3 text-slate-700">{{ failure.reason }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
       <button type="button" (click)="onImport()" [disabled]="!selectedAccountId() || committing()" [attr.aria-busy]="committing()" class="rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60">
         {{ committing() ? 'Importing…' : 'Import' }}
       </button>
@@ -90,11 +119,28 @@
         <div><dt class="text-sm text-slate-500">Failed</dt><dd class="mt-1 text-xl font-bold text-rose-700">{{ importResult.batch.rows_failed }}</dd></div>
       </dl>
       @if (importResult.failures.length > 0) {
-        <div class="overflow-x-auto rounded-xl border border-rose-100 bg-white">
-          <table class="w-full text-left text-sm">
-            <thead class="border-b border-rose-100 bg-rose-50 text-xs uppercase tracking-wide text-slate-500"><tr><th scope="col" class="px-3 py-3 font-medium">Row</th><th scope="col" class="px-3 py-3 font-medium">Reason</th></tr></thead>
-            <tbody class="divide-y divide-rose-50">@for (failure of importResult.failures; track failure.row_index) { <tr><td class="px-3 py-3 text-slate-700">{{ failure.row_index }}</td><td class="px-3 py-3 text-slate-700">{{ failure.reason }}</td></tr> }</tbody>
-          </table>
+        <div role="alert" class="space-y-3 rounded-xl border border-rose-100 bg-rose-50/50 p-4">
+          <div>
+            <h4 class="font-semibold text-rose-800">Failures ({{ importResult.failures.length }})</h4>
+            <p class="text-sm text-rose-700">These rows were not imported. Recreate any real movement via Suggestions → New using the details shown here.</p>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-rose-100 bg-white">
+            <table class="w-full min-w-[850px] text-left text-sm">
+              <thead class="border-b border-rose-100 bg-rose-50 text-xs uppercase tracking-wide text-slate-500"><tr><th scope="col" class="px-3 py-3 font-medium">Row</th><th scope="col" class="px-3 py-3 font-medium">Date</th><th scope="col" class="px-3 py-3 font-medium">Direction</th><th scope="col" class="px-3 py-3 font-medium">Amount</th><th scope="col" class="px-3 py-3 font-medium">Detail</th><th scope="col" class="px-3 py-3 font-medium">Reason</th></tr></thead>
+              <tbody class="divide-y divide-rose-50">
+                @for (failure of importResult.failures; track failure.row_index) {
+                  <tr>
+                    <td class="px-3 py-3 text-slate-700">{{ failure.row_index }}</td>
+                    <td class="whitespace-nowrap px-3 py-3 text-slate-600">{{ formatDate(failure.value_date ?? failure.booked_date) }}</td>
+                    <td class="px-3 py-3"><span class="rounded-full px-2.5 py-1 text-xs font-semibold" [class.bg-rose-100]="failure.direction === 'DEBIT'" [class.text-rose-700]="failure.direction === 'DEBIT'" [class.bg-emerald-100]="failure.direction === 'CREDIT'" [class.text-emerald-700]="failure.direction === 'CREDIT'" [class.bg-slate-100]="!failure.direction" [class.text-slate-600]="!failure.direction">{{ failure.direction ?? 'Unknown' }}</span></td>
+                    <td class="whitespace-nowrap px-3 py-3 font-semibold tabular-nums text-slate-700">{{ failure.amount_minor | money: currency() }}</td>
+                    <td class="px-3 py-3 text-slate-700">{{ failure.merchant || failure.description || failure.reference || failure.external_id || '—' }}</td>
+                    <td class="px-3 py-3 text-slate-700">{{ failure.reason }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
       }
     </section>
