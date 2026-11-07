@@ -86,7 +86,9 @@ export class BankImportPageComponent {
     this.importApi.preview(householdId, file).subscribe({
       next: (preview) => {
         this.preview.set(preview);
-        this.skippedExpanded.set(preview.skipped.length <= 3);
+        // Skipped rows need to be visible by default so the count is never
+        // mistaken for transactions that silently disappeared.
+        this.skippedExpanded.set(true);
       },
       error: (error: unknown) => {
         this.error.set(toApiErrorMessage(error));

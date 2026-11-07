@@ -74,15 +74,22 @@
           </tbody>
         </table>
       </div>
-      <div class="space-y-3 rounded-xl border border-amber-100 bg-amber-50/50 p-4 text-sm">
-        <button type="button" (click)="toggleSkipped()" [attr.aria-expanded]="skippedExpanded()" aria-controls="skipped-rows-list" class="font-semibold text-slate-700 underline decoration-dotted underline-offset-4">Skipped ({{ statement.skipped_rows }})</button>
-        <p class="text-slate-600">These balance and turnover rows, rows without a debit/credit indicator, and zero-amount rows are non-movements, never money movements, so there is nothing to recreate.</p>
-        <ul id="skipped-rows-list" [hidden]="!skippedExpanded()" class="list-inside list-disc space-y-1 text-slate-700">
-          @for (skip of statement.skipped; track skip.row_index) {
-            <li>Row {{ skip.row_index }} — {{ skip.reason }}</li>
-          }
-        </ul>
-      </div>
+      @if (statement.skipped_rows > 0) {
+        <section aria-labelledby="skipped-rows-heading" class="space-y-3 rounded-xl border border-amber-100 bg-amber-50/50 p-4 text-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h4 id="skipped-rows-heading" class="font-semibold text-amber-950">Not imported — skipped rows ({{ statement.skipped_rows }})</h4>
+            <button type="button" (click)="toggleSkipped()" [attr.aria-expanded]="skippedExpanded()" aria-controls="skipped-rows-list" class="font-semibold text-slate-700 underline decoration-dotted underline-offset-4">
+              {{ skippedExpanded() ? 'Hide rows' : 'Show rows' }}
+            </button>
+          </div>
+          <p class="text-slate-600">Opening/closing balances and turnover totals are statement summaries. Rows without direction or with zero amount are listed for transparency; if any is a real movement, recreate it manually from the original statement.</p>
+          <ul id="skipped-rows-list" [hidden]="!skippedExpanded()" class="max-h-60 list-inside list-disc space-y-1 overflow-y-auto text-slate-700">
+            @for (skip of statement.skipped; track skip.row_index) {
+              <li>Row {{ skip.row_index }} — {{ skip.reason }}</li>
+            }
+          </ul>
+        </section>
+      }
       @if (statement.failures.length > 0) {
         <div role="alert" class="space-y-3 rounded-xl border border-rose-100 bg-rose-50/50 p-4">
           <div>

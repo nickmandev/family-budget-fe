@@ -144,9 +144,9 @@ describe('BankImportPageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Groceries');
     expect(fixture.nativeElement.textContent).toContain('REF-1');
     expect(fixture.nativeElement.textContent).toContain('2 entries');
-    expect(fixture.nativeElement.textContent).toContain('Skipped (1)');
+    expect(fixture.nativeElement.textContent).toContain('Not imported — skipped rows (1)');
     expect(fixture.nativeElement.textContent).toContain('Row 3 — zero-amount row');
-    expect(fixture.nativeElement.textContent).toContain('These balance and turnover rows, rows without a debit/credit indicator, and zero-amount rows are non-movements, never money movements, so there is nothing to recreate.');
+    expect(fixture.nativeElement.textContent).toContain('if any is a real movement, recreate it manually from the original statement.');
     expect(fixture.nativeElement.textContent).toContain('Failures (1)');
     expect(fixture.nativeElement.textContent).toContain('These rows were not imported. Recreate any real movement via Suggestions → New using the details shown here.');
     const failureCells = fixture.nativeElement.querySelectorAll('table')[1].querySelectorAll('tbody td') as NodeListOf<HTMLTableCellElement>;
@@ -191,13 +191,13 @@ describe('BankImportPageComponent', () => {
     findButton(fixture, 'Import').click();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Skipped (1)');
-    expect(fixture.nativeElement.textContent).toContain('These balance and turnover rows, rows without a debit/credit indicator, and zero-amount rows are non-movements, never money movements, so there is nothing to recreate.');
+    expect(fixture.nativeElement.textContent).toContain('Not imported — skipped rows (1)');
+    expect(fixture.nativeElement.textContent).toContain('if any is a real movement, recreate it manually from the original statement.');
     expect(fixture.nativeElement.textContent).not.toContain('Failures (');
     expect(fixture.nativeElement.querySelectorAll('[role="alert"]').length).toBe(0);
   });
 
-  it('collapses skipped-row details by default when there are more than three', () => {
+  it('shows skipped-row details by default when there are more than three', () => {
     importApi.preview.and.returnValue(of({
       ...preview,
       skipped_rows: 4,
@@ -214,20 +214,20 @@ describe('BankImportPageComponent', () => {
     fixture.nativeElement.querySelector('button').click();
     fixture.detectChanges();
 
-    const toggle = findButton(fixture, 'Skipped (4)');
+    const toggle = findButton(fixture, 'Hide rows');
     const list = fixture.nativeElement.querySelector('#skipped-rows-list') as HTMLUListElement;
-    expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    expect(list.hidden).toBeTrue();
-    expect(fixture.nativeElement.textContent).toContain('Skipped (4)');
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(list.hidden).toBeFalse();
+    expect(fixture.nativeElement.textContent).toContain('Not imported — skipped rows (4)');
     expect(fixture.nativeElement.textContent).toContain('Row 0 — opening balance row');
     expect(fixture.nativeElement.textContent).toContain('Row 1 — closing balance row');
     expect(fixture.nativeElement.textContent).toContain('Row 2 — debit turnover row');
-    expect(fixture.nativeElement.textContent).toContain('These balance and turnover rows, rows without a debit/credit indicator, and zero-amount rows are non-movements, never money movements, so there is nothing to recreate.');
+    expect(fixture.nativeElement.textContent).toContain('if any is a real movement, recreate it manually from the original statement.');
 
     toggle.click();
     fixture.detectChanges();
-    expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    expect(list.hidden).toBeFalse();
+    expect(fixture.nativeElement.textContent).toContain('Show rows');
+    expect(list.hidden).toBeTrue();
     expect(fixture.nativeElement.textContent).toContain('Row 3 — credit turnover row');
   });
 
